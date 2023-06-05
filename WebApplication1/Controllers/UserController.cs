@@ -16,15 +16,16 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet("register")]
-        public IActionResult RegisterUser(string username, string password, string email)
+        public IActionResult RegisterUser([FromQuery] string username, [FromQuery] string password, [FromQuery] string email) //O FromQuery indica que o elemento deve vir de um Query no url
         {
             User newUser = userRegister.RegisterUser(username, password, email);
 
-            if (newUser != null)
+            if (newUser == null)
             {
                 return BadRequest("deu ruim");
             }
             Console.WriteLine("deu bom requisitei");
+            
             return Ok(newUser);
         }
     }

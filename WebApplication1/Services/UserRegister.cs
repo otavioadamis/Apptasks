@@ -4,6 +4,7 @@ namespace WebApplication1.Services
 {
     public class UserRegister
     {
+
         public User RegisterUser(string username, string password, string email)
         {
             User newUser = new User

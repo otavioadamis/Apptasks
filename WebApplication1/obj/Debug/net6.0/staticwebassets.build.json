@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "0ip/0rJWUjtenyQXN2cjlm+7t2/4szQmFfHnCMfZLM0=",
+  "Hash": "UlotVp1/5tS5pG4UbbEZAybe56s9QLdnT2VHUJHVDyk=",
   "Source": "WebApplication1",
   "BasePath": "_content/WebApplication1",
   "Mode": "Default",
@@ -49,6 +49,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "A:\\Prog\\C#\\Teste\\WebApplication1\\WebApplication1\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\WebApplication1.bundle.scp.css"
+    },
+    {
+      "Identity": "A:\\Prog\\C#\\Teste\\WebApplication1\\WebApplication1\\wwwroot\\.gitignore",
+      "SourceId": "WebApplication1",
+      "SourceType": "Discovered",
+      "ContentRoot": "A:\\Prog\\C#\\Teste\\WebApplication1\\WebApplication1\\wwwroot\\",
+      "BasePath": "_content/WebApplication1",
+      "RelativePath": ".gitignore",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\.gitignore"
     },
     {
       "Identity": "A:\\Prog\\C#\\Teste\\WebApplication1\\WebApplication1\\wwwroot\\css\\site.css",
