@@ -1,9 +1,19 @@
-﻿namespace WebApplication1.Models
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+
+namespace WebApplication1.Models
 {
     public class User
     {
-        public string username { get; set; }
-        public string password { get; set; }
-        public string email { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
+
+        [BsonElement("Name")]
+        public string Name { get; set; }
+        public string Password { get; set; }
+        public string Email { get; set; }
+
+
     }
 }
