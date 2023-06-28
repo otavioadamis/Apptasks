@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Xml.Linq;
 using WebApplication1.Models;
+using WebApplication1.Models.DTOs;
 using WebApplication1.Services;
 
 namespace WebApplication1.Controllers
@@ -10,12 +11,15 @@ namespace WebApplication1.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
+        private readonly AuthService _authService;
 
-        public UserController(UserService userService)
+        public UserController(UserService userService, AuthService authService)
         {
             this._userService = userService;
+            this._authService = authService;
         }
 
+         
         [HttpGet()]
         public ActionResult<List<User>> Get() =>
             _userService.Get();
@@ -33,20 +37,51 @@ namespace WebApplication1.Controllers
         
         //REGISTER NEW USER
         [HttpPost("register")]
-        public ActionResult<User> Signup(User thisUser)
+        public ActionResult<User> Signup(UserRegisterDTO thisUser)
         {        
-            _userService.Signup(thisUser);
-            return CreatedAtRoute("GetUser", new { name = thisUser.Name.ToString() }, thisUser);
+           var checkEmail = _userService.GetByEmail(thisUser.Email);
+            if(checkEmail != null) //existe um usuario com esse email ou nome
+            {
+                return BadRequest("Email ja cadastrado");
+            }
+
+            var createdUser = 
+                _userService.Signup(thisUser);
+            
+            string token = _authService.CreateToken(createdUser);
+
+            var response = new LoginResponseModel
+            {
+                Token = token,
+                Name = createdUser.Name
+            };
+
+            return Ok(response);
+            
+            //return CreatedAtRoute("GetUser", new { name = thisUser.Name.ToString() }, thisUser);
         }
 
         //LOGIN USER
         [HttpPost("login")]
-        public ActionResult<User> Login(User thisUser)
+        public ActionResult<LoginResponseModel> Login(UserLoginDTO thisUser)
         {
+
 
             var loggedUser = _userService.Login(thisUser);
             if(loggedUser == null) { return BadRequest("Invalid Password or Username"); }
-            return Ok(loggedUser);
+
+            string token = 
+                _authService.CreateToken(loggedUser);
+
+            var response = new LoginResponseModel
+            {
+                Token = token,
+                Name = loggedUser.Name
+            };
+
+
+            return Ok(response);
+            
 
         }
 

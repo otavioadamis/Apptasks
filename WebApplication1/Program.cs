@@ -17,6 +17,7 @@ namespace WebApplication1
             builder.Services.AddRazorPages();
             builder.Services.AddControllers();          //Adiciona os controllers do Projeto
             builder.Services.AddScoped<UserService>(); //Adiciona a funcao (service) de Registracao
+            builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<IUsersDatabaseSettings, UsersDatabaseSettings>();
 
             var app = builder.Build();

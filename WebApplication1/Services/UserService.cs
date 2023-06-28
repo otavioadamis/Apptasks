@@ -1,7 +1,13 @@
 ﻿using Amazon.Util.Internal.PlatformServices;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Xml.Linq;
+using WebApplication1.Controllers;
 using WebApplication1.Models;
+using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Services
 {
@@ -20,15 +26,13 @@ namespace WebApplication1.Services
         }*/
 
         private readonly IMongoCollection<User> _users;
-
+        
         public UserService(IUsersDatabaseSettings settings)
         {
-
             var client = new MongoClient();
             var database = client.GetDatabase();
 
             _users = database.GetCollection<User>();
-
         }
 
         //METODOS PADROES
@@ -40,10 +44,10 @@ namespace WebApplication1.Services
         public User GetByEmail(string email) => _users.Find(user => user.Email == email).FirstOrDefault();
 
         //CREATE
-        public User Create(User user)
+        public User Create(User thisUser)
         {
-            _users.InsertOne(user);
-            return user;
+            _users.InsertOne(thisUser);
+            return thisUser;
         }
 
             //UPDATE
@@ -59,29 +63,40 @@ namespace WebApplication1.Services
             
             //Signup
 
-        public User Signup(User thisUser)
-        {
-            thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
-            _users.InsertOne(thisUser);
-            return thisUser;
-        }
-
-        // TODO [usersDTOs]
-        public User Login(User thisUser)
+        public User Signup(UserRegisterDTO thisUser)
         {
            
-           var user = GetByEmail(thisUser.Email);
-            bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
+            thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
 
-            if(user == null || !isPasswordMatch)
+            var newUser = new User()
+            {
+                Email = thisUser.Email,
+                Name = thisUser.Name,
+                Password = thisUser.Password
+            };
+            
+            Create(newUser);
+            return newUser;
+        }
+
+        
+        public User Login(UserLoginDTO thisUser)
+        {
+           
+
+           var user = GetByEmail(thisUser.Email);
+                       
+            if(user == null)
             {
                 return null;
             }
-            
+
+            bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
+             if(!isPasswordMatch) { return null; }
+
             return user;
             
         }
-
 
     }
 }

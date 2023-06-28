@@ -44,3 +44,12 @@ A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\runtimes\osx\n
 A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\runtimes\win\native\mongocrypt.dll
 A:\Prog\C#\Teste\WebApplication1\WebApplication1\obj\Debug\net6.0\WebApplication1.csproj.CopyComplete
 A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\BCrypt.Net-Next.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\Microsoft.IdentityModel.Abstractions.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\Microsoft.IdentityModel.JsonWebTokens.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\Microsoft.IdentityModel.Logging.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\Microsoft.IdentityModel.Protocols.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\Microsoft.IdentityModel.Tokens.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\System.IdentityModel.Tokens.Jwt.dll
+A:\Prog\C#\Teste\WebApplication1\WebApplication1\bin\Debug\net6.0\System.Security.Permissions.dll
