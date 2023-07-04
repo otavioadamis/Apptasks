@@ -18,7 +18,7 @@ namespace WebApplication1.Services
         {
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, thisUser.Name)
+                new Claim(ClaimTypes.Name, thisUser.Id)
             };
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
@@ -34,5 +34,6 @@ namespace WebApplication1.Services
 
             return jwt;
         }
+
     }
 }
