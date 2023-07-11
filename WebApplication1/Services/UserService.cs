@@ -13,31 +13,20 @@ namespace WebApplication1.Services
 {
     public class UserService
     {
-        /*public User RegisterUser(string username, string password, string email)
-        {
-            User newUser = new User
-            {
-                Name = username,
-                Password = password,
-                Email = email
-            };
-
-            return newUser;
-        }*/
 
         private readonly IMongoCollection<User> _users;
-        
+
         public UserService(IUsersDatabaseSettings settings)
         {
-            var client = new MongoClient("");
-            var database = client.GetDatabase("");
+            var client = new MongoClient();
+            var database = client.GetDatabase();
 
-            _users = database.GetCollection<User>("");
+            _users = database.GetCollection<User>();
         }
 
         //METODOS PADROES
-            
-            //READ
+
+        //READ
         public List<User> Get() => _users.Find(user => true).ToList();
         public User GetByName(string name) => _users.Find(user => user.Name == name).FirstOrDefault();
         public User GetByEmail(string email) => _users.Find(user => user.Email == email).FirstOrDefault();
@@ -67,7 +56,8 @@ namespace WebApplication1.Services
             {
                 Email = thisUser.Email,
                 Name = thisUser.Name,
-                Password = thisUser.Password
+                Password = thisUser.Password,
+                Role = thisUser.Role
             };
             
             Create(newUser);
@@ -103,7 +93,7 @@ namespace WebApplication1.Services
                 Id = oldUser.Id,
                 Email = thisUser.Email,
                 Name = thisUser.Name,
-                
+
                 Password = thisUser.Password
             };
 

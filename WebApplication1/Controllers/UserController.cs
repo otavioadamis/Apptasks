@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using WebApplication1.Authorization;
+//using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,16 +17,21 @@ namespace WebApplication1.Controllers
     {
         private readonly UserService _userService;
         private readonly AuthService _authService;
+        private readonly JwtUtils _jwtUtils;
 
-        public UserController(UserService userService, AuthService authService)
+        public UserController(UserService userService, AuthService authService, JwtUtils jwtUtils)
         {
             this._userService = userService;
             this._authService = authService;
+            this._jwtUtils = jwtUtils;
         }
 
+        [CustomAuthorize(Role.Admin)]
         [HttpGet()]
-        public ActionResult<List<User>> Get() =>
-            _userService.Get();
+        public ActionResult<List<User>> Get()
+        {
+            return _userService.Get();
+        }
 
         [HttpGet("{name}", Name = "GetUser")]
         public ActionResult<User> GetByName(string name)
@@ -50,7 +56,7 @@ namespace WebApplication1.Controllers
             var createdUser =
                 _userService.Signup(thisUser);
 
-            string token = _authService.CreateToken(createdUser);
+            string token = _jwtUtils.CreateToken(createdUser);
 
             var response = new LoginResponseModel
             {
@@ -72,7 +78,7 @@ namespace WebApplication1.Controllers
             if (loggedUser == null) { return BadRequest("Invalid Password or Username"); }
 
             string token =
-                _authService.CreateToken(loggedUser);
+                _jwtUtils.CreateToken(loggedUser);
 
             var response = new LoginResponseModel
             {
@@ -80,14 +86,13 @@ namespace WebApplication1.Controllers
                 Name = loggedUser.Name
             };
 
-
             return Ok(response);
 
         }
 
         //Update an User
+        [CustomAuthorize]
         [HttpPut()]
-        [Authorize]
         public ActionResult<User> UpdateInfo([FromQuery] string _id, UserUpdateDTO thisUser)
         {
             var updatedUser = 
@@ -108,7 +113,7 @@ namespace WebApplication1.Controllers
             if (user == null) { return BadRequest("User not found"); }
 
             string token =
-                _authService.CreateToken(user);
+                _jwtUtils.CreateToken(user);
 
 
             return Ok(token);
@@ -116,7 +121,7 @@ namespace WebApplication1.Controllers
 
         //Reset the user password, authorized with JwT Token
         [HttpPost("resetpassword")]
-        [Authorize]
+        [CustomAuthorize]
         public ActionResult<User> ResetPassword(UserResetPwDTO thisUser)
         {
 
@@ -137,22 +142,6 @@ namespace WebApplication1.Controllers
             return Ok("Password Changed!");
         }
 
-        //UPDATE AN USER 
-        /*       [HttpPut("{name}")]
-               public ActionResult<User> Update(string name, User updatedUser) 
-               {
-                   var user = _userService.GetByName(name);
-
-                   if (user == null) { return NotFound(); };
-
-                   updatedUser.Id = user.Id;
-
-                   _userService.Update(name, updatedUser);
-
-                   return NoContent();
-
-               }*/
-
         //DELETE AN USER
         
         [HttpDelete("{name}")]
@@ -168,6 +157,12 @@ namespace WebApplication1.Controllers
         }
     }
 }
+
+//TODO LIST
+
+//CREATE A METHOD TO REGISTER ADMIN AND NON-ADMINS USERS
+//RE-CREATE THE METHOD TO UPDATE JUST SOME FIELDS OF THE DATABASE
+//DELETE THINGS THAT I DONT NEED ANYMORE
 
 
 

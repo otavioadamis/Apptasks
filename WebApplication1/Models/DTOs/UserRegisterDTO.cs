@@ -15,5 +15,8 @@ namespace WebApplication1.Models.DTOs
 
         [Required]
         public string Email { get; set; }
+
+        [Required]
+        public Role Role { get; set; }
     }
 }
