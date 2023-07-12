@@ -1,5 +1,4 @@
 ﻿using WebApplication1.Authorization;
-//using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,6 +7,9 @@ using System.Xml.Linq;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 using WebApplication1.Services;
+using Amazon.Runtime;
+using WebApplication1.Helpers;
+using Microsoft.Net.Http.Headers;
 
 namespace WebApplication1.Controllers
 {
@@ -16,14 +18,14 @@ namespace WebApplication1.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
-        private readonly AuthService _authService;
         private readonly JwtUtils _jwtUtils;
+        private readonly AuthService _authService;
 
-        public UserController(UserService userService, AuthService authService, JwtUtils jwtUtils)
+        public UserController(UserService userService, JwtUtils jwtUtils, AuthService authService)
         {
             this._userService = userService;
-            this._authService = authService;
             this._jwtUtils = jwtUtils;
+            this._authService = authService;
         }
 
         [CustomAuthorize(Role.Admin)]
@@ -66,7 +68,6 @@ namespace WebApplication1.Controllers
 
             return Ok(response);
 
-           //return CreatedAtRoute("GetUser", new { name = thisUser.Name.ToString() }, thisUser);
         }
 
         //LOGIN USER
@@ -125,10 +126,7 @@ namespace WebApplication1.Controllers
         public ActionResult<User> ResetPassword(UserResetPwDTO thisUser)
         {
 
-            var claimsIdentity = this.User.Identity as ClaimsIdentity;
-            var userId = claimsIdentity.FindFirst(ClaimTypes.Name)?.Value; //Get the user ID using jwt Token Claim
-
-            var user = _userService.GetById(userId);
+            var user = HttpContext.Items["User"] as User;
 
             if (user == null) { return BadRequest("Invalid Credentials"); }
 
@@ -137,7 +135,7 @@ namespace WebApplication1.Controllers
 
             if(thisUser.Password != thisUser.ConfirmPassword) { return BadRequest("Confirm Password and Passoword fiels must be equal"); }
 
-            _userService.ChangePw(userId, thisUser);
+            _userService.ChangePw(user.Id, thisUser);
         
             return Ok("Password Changed!");
         }
@@ -158,11 +156,6 @@ namespace WebApplication1.Controllers
     }
 }
 
-//TODO LIST
-
-//CREATE A METHOD TO REGISTER ADMIN AND NON-ADMINS USERS
-//RE-CREATE THE METHOD TO UPDATE JUST SOME FIELDS OF THE DATABASE
-//DELETE THINGS THAT I DONT NEED ANYMORE
 
 
 

@@ -28,29 +28,13 @@ namespace WebApplication1
             {
                 // serialize enums as strings in api responses (e.g. Role)
                 x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            }); //Adiciona os controllers do Projeto
-            builder.Services.AddScoped<UserService>(); //Adiciona a funcao (service) de Registracao
+            });
+
+            builder.Services.AddScoped<Utils>();
+            builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<JwtUtils>();
             builder.Services.AddScoped<IUsersDatabaseSettings, UsersDatabaseSettings>();
-
-        /*builder.Services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(o =>
-        {
-            o.TokenValidationParameters = new TokenValidationParameters
-            {
-                IssuerSigningKey = new SymmetricSecurityKey
-                (Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Token"])),
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = false,
-                ValidateIssuerSigningKey = true
-            };
-        });*/
 
         builder.Services.AddAuthorization();
             
@@ -77,7 +61,7 @@ namespace WebApplication1
 
             app.MapRazorPages();
                        
-            app.MapControllers(); //Mapear os controllers do meu app
+            app.MapControllers();
 
             app.Run();
         }

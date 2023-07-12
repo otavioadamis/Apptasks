@@ -37,15 +37,16 @@ namespace WebApplication1.Services
             _users.InsertOne(thisUser);
             return thisUser;
         }
-            //UPDATE
+        //UPDATE
         public void Update(string name, User updatedUser) => _users.ReplaceOne(user => user.Name == name, updatedUser);
-            //DELETE
+
+        //DELETE
         public void Delete(string name) => _users.DeleteOne(user => user.Name == name);
 
                
         //MEUS METODOS REGISTRATION E AUTH
             
-            //Signup
+        //Signup
 
         public User Signup(UserRegisterDTO thisUser)
         {
@@ -77,8 +78,7 @@ namespace WebApplication1.Services
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
              if(!isPasswordMatch) { return null; }
 
-            return user;
-            
+            return user;          
         }
 
         public User UpdateInfo(string _id, UserUpdateDTO thisUser) 
@@ -86,15 +86,12 @@ namespace WebApplication1.Services
             var oldUser = GetById(_id);
                 if (oldUser == null) { return null; };
 
-            thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
-
             var newUser = new User()
             {
                 Id = oldUser.Id,
                 Email = thisUser.Email,
                 Name = thisUser.Name,
-
-                Password = thisUser.Password
+                Password = oldUser.Password
             };
 
             Update(oldUser.Name , newUser);
@@ -122,8 +119,6 @@ namespace WebApplication1.Services
                         Update(oldUser.Name, newUser);
 
             return newUser;
-
         }
-
     }
 }
