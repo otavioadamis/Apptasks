@@ -93,7 +93,7 @@ namespace WebApplication1.Controllers
 
         //Update an User
         [CustomAuthorize]
-        [HttpPut()]
+        [HttpPatch()]
         public ActionResult<User> UpdateInfo([FromQuery] string _id, UserUpdateDTO thisUser)
         {
             var updatedUser = 

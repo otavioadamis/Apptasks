@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 using WebApplication1.Controllers;
@@ -24,8 +25,6 @@ namespace WebApplication1.Services
             _users = database.GetCollection<User>();
         }
 
-        //METODOS PADROES
-
         //READ
         public List<User> Get() => _users.Find(user => true).ToList();
         public User GetByName(string name) => _users.Find(user => user.Name == name).FirstOrDefault();
@@ -40,14 +39,18 @@ namespace WebApplication1.Services
         //UPDATE
         public void Update(string name, User updatedUser) => _users.ReplaceOne(user => user.Name == name, updatedUser);
 
+        public void Update(string _id, UserUpdateDTO thisUser)
+        {
+            var updateEmail = Builders<User>.Update.Set(o => o.Email, thisUser.Email);
+            _users.UpdateOne(o => o.Id == _id , updateEmail);
+
+            var updateName = Builders<User>.Update.Set(o => o.Name, thisUser.Name);
+            _users.UpdateOne(o => o.Id == _id, updateName);
+        }
+
         //DELETE
         public void Delete(string name) => _users.DeleteOne(user => user.Name == name);
-
-               
-        //MEUS METODOS REGISTRATION E AUTH
-            
-        //Signup
-
+                      
         public User Signup(UserRegisterDTO thisUser)
         {
            
@@ -83,42 +86,29 @@ namespace WebApplication1.Services
 
         public User UpdateInfo(string _id, UserUpdateDTO thisUser) 
         {
-            var oldUser = GetById(_id);
-                if (oldUser == null) { return null; };
+            var user = GetById(_id);
+                if (user == null) { return null; };
 
-            var newUser = new User()
-            {
-                Id = oldUser.Id,
-                Email = thisUser.Email,
-                Name = thisUser.Name,
-                Password = oldUser.Password
-            };
+            Update(_id, thisUser);
 
-            Update(oldUser.Name , newUser);
-
-            return newUser;
+            var updatedUser = GetById(_id);
+            return updatedUser;
 
         }
 
         public User ChangePw(string _id, UserResetPwDTO thisUser)
         {
-            var oldUser = GetById(_id);
-            if (oldUser == null) { return null; };
+            var user = GetById(_id);
+            if (user == null) { return null; };
 
             thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
 
-            var newUser = new User()
-            {
-                Id = oldUser.Id,
-                Email = oldUser.Email,
-                Name = oldUser.Name,
+            var updatePw = Builders<User>.Update.Set(o => o.Password, thisUser.Password);
+            _users.UpdateOne(o => o.Id == _id, updatePw);
 
-                Password = thisUser.Password
-            };
+            var updatedUser = GetById(_id);
+            return updatedUser;
 
-                        Update(oldUser.Name, newUser);
-
-            return newUser;
         }
     }
 }
