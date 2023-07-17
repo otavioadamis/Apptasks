@@ -3,16 +3,14 @@ using MongoDB.Bson;
 
 namespace WebApplication1.Models
 {
-    public class User
+    public class Task
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id { get; set; }
-
-        [BsonElement("Name")]
+        public int Id { get; set; }
         public string Name { get; set; }
-        public string Password { get; set; }
-        public string Email { get; set; }
-        public Role Role { get; set; }
+        public string Description { get; set; }      
+        public bool IsCompleted { get; set; }
+        public User Responsable { get; set; }
     }
 }

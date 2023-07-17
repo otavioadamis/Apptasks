@@ -127,7 +127,6 @@ namespace WebApplication1.Controllers
         {
 
             var user = HttpContext.Items["User"] as User;
-
             if (user == null) { return BadRequest("Invalid Credentials"); }
 
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);

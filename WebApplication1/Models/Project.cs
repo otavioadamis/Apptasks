@@ -1,18 +1,19 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
+using System.Text.Json.Serialization;
 
 namespace WebApplication1.Models
 {
-    public class User
+    public class Project
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
-
-        [BsonElement("Name")]
         public string Name { get; set; }
-        public string Password { get; set; }
-        public string Email { get; set; }
-        public Role Role { get; set; }
+        public string Description { get; set; }
+        public string? CreatorId { get; set; }
+        
+        //public List<Task> Tasks { get; set; }
+        //public List<User> Team { get; set; }
     }
 }

@@ -14,16 +14,14 @@ namespace WebApplication1.Services
 {
     public class UserService
     {
-
         private readonly IMongoCollection<User> _users;
 
-        public UserService(IUsersDatabaseSettings settings)
+        public UserService(IMongoCollection<User> users)
         {
-            var client = new MongoClient();
-            var database = client.GetDatabase();
-
-            _users = database.GetCollection<User>();
+            _users = users;
         }
+        
+        //CRUD
 
         //READ
         public List<User> Get() => _users.Find(user => true).ToList();
@@ -47,7 +45,6 @@ namespace WebApplication1.Services
             var updateName = Builders<User>.Update.Set(o => o.Name, thisUser.Name);
             _users.UpdateOne(o => o.Id == _id, updateName);
         }
-
         //DELETE
         public void Delete(string name) => _users.DeleteOne(user => user.Name == name);
                       

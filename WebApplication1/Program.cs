@@ -9,18 +9,17 @@ using System.Text.Json.Serialization;
 using WebApplication1.Authorization;
 using Microsoft.Extensions.Configuration;
 using WebApplication1.Helpers;
+using System.Collections;
+using System.Xml.Linq;
 
 namespace WebApplication1
 {
     public class Program
-
     {
         public static void Main(string[] args)
         {
             
             var builder = WebApplication.CreateBuilder(args);
-
-
 
         // Add services to the container.           
         builder.Services.AddRazorPages();
@@ -32,11 +31,29 @@ namespace WebApplication1
 
             builder.Services.AddScoped<Utils>();
             builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<ProjectService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<JwtUtils>();
             builder.Services.AddScoped<IUsersDatabaseSettings, UsersDatabaseSettings>();
 
-        builder.Services.AddAuthorization();
+            // Configuring the Mongodb collections
+            var client = new MongoClient();
+            var db = client.GetDatabase();
+
+            //Users collection
+            var usersCollection = db.GetCollection<User>();
+            builder.Services.AddSingleton<IMongoDatabase>(db);
+            builder.Services.AddSingleton<IMongoCollection<User>>(usersCollection);
+
+            //Projects collection
+            var projectsCollection = db.GetCollection<Project>("Projects");
+            builder.Services.AddSingleton<IMongoCollection<Project>>(projectsCollection);
+
+            //Tasks collection (have to call it Models.Task cuz of the System.Task)
+            //var tasksCollection = db.GetCollection<Models.Task>("Tasks");
+            //builder.Services.AddSingleton<IMongoCollection<Models.Task>>(tasksCollection);
+
+            builder.Services.AddAuthorization();
             
             var app = builder.Build();
 
