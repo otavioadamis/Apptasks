@@ -7,10 +7,10 @@ namespace WebApplication1.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public int Id { get; set; }
+        public string? Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }      
-        public bool IsCompleted { get; set; }
-        public User Responsable { get; set; }
+        public bool? IsCompleted { get; set; }
+        public string? Responsable { get; set; }
     }
 }

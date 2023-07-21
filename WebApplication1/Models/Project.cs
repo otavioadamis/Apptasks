@@ -11,9 +11,8 @@ namespace WebApplication1.Models
         public string? Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string? CreatorId { get; set; }
-        
-        //public List<Task> Tasks { get; set; }
-        //public List<User> Team { get; set; }
+        public string? CreatorId { get; set; }        
+        public List<Task>? Tasks { get; set; }      
+        public List<string> Team { get; set; }
     }
 }

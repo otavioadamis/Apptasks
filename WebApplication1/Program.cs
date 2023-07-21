@@ -30,6 +30,7 @@ namespace WebApplication1
             });
 
             builder.Services.AddScoped<Utils>();
+            builder.Services.AddScoped<TaskService>();
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<ProjectService>();
             builder.Services.AddScoped<AuthService>();

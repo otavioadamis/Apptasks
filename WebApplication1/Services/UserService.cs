@@ -68,8 +68,7 @@ namespace WebApplication1.Services
         public User Login(UserLoginDTO thisUser)
         {
            
-           var user = GetByEmail(thisUser.Email);
-                       
+           var user = GetByEmail(thisUser.Email);                      
             if(user == null)
             {
                 return null;

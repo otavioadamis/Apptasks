@@ -67,7 +67,6 @@ namespace WebApplication1.Controllers
             };
 
             return Ok(response);
-
         }
 
         //LOGIN USER
@@ -140,7 +139,8 @@ namespace WebApplication1.Controllers
         }
 
         //DELETE AN USER
-        
+
+        [CustomAuthorize(Role.Admin)]
         [HttpDelete("{name}")]
         public ActionResult<User> Delete(string name)
         {
