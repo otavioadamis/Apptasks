@@ -33,6 +33,7 @@ namespace WebApplication1.Controllers
             return _projectService.Get();
         }
 
+        [CustomAuthorize(Role.Admin)]
         [HttpPost()]
         public ActionResult<Project> Create(Project thisProject)
         {
@@ -56,7 +57,6 @@ namespace WebApplication1.Controllers
             {
                 return BadRequest("Sorry! You are not the owner of this project!");
             }
-
             _projectService.UpdateProject(_id, thisProject);
             return Ok("Projeto atualizado!");
         }
@@ -66,10 +66,8 @@ namespace WebApplication1.Controllers
         public ActionResult Delete(ProjectDelDTO request)
         {
             var user = HttpContext.Items["User"] as User;
-
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
-
-            if (!isPasswordMatch) { return BadRequest("Wrong password"); }
+                if (!isPasswordMatch) { return BadRequest("Wrong password"); }
 
             var project = _projectService.GetByName(request.ProjectName);
             if (project == null) { return BadRequest("Cant find this project!"); }

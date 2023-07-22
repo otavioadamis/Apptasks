@@ -12,6 +12,8 @@ using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Services
 {
+
+
     public class UserService
     {
         private readonly IMongoCollection<User> _users;
@@ -21,6 +23,7 @@ namespace WebApplication1.Services
             _users = users;
         }
         
+        //Todo: create generic repositories to simple generic CRUD operations, so i avoid duplicating code.
         //CRUD
 
         //READ

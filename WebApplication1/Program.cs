@@ -50,10 +50,6 @@ namespace WebApplication1
             var projectsCollection = db.GetCollection<Project>("Projects");
             builder.Services.AddSingleton<IMongoCollection<Project>>(projectsCollection);
 
-            //Tasks collection (have to call it Models.Task cuz of the System.Task)
-            //var tasksCollection = db.GetCollection<Models.Task>("Tasks");
-            //builder.Services.AddSingleton<IMongoCollection<Models.Task>>(tasksCollection);
-
             builder.Services.AddAuthorization();
             
             var app = builder.Build();

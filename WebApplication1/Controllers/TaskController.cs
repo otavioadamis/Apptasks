@@ -1,5 +1,7 @@
 ﻿using Amazon.Runtime.Internal;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 using WebApplication1.Authorization;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
@@ -31,9 +33,24 @@ namespace WebApplication1.Controllers
 
         }
 
+        [HttpGet("{projectName}/{taskName}")]
+        [CustomAuthorize]
+        public ActionResult<Task> GetTask(string projectName, string taskName)
+        {
+            var project = _projectService.GetByName(projectName);
+                if (project == null) { return BadRequest("Not found!"); }
+
+            var taskToFind = project.Tasks.Find(t => t.Name == taskName);
+                if (taskToFind != null) 
+            {
+                return Ok(taskToFind);
+            }
+            return BadRequest("Cant find this task!");
+        }
+
         [HttpPatch("addtask")]
         [CustomAuthorize(Role.Admin)]
-        public ActionResult<Task> AddTask([FromQuery] string _id, Models.Task thisTask)
+        public ActionResult<Task> AddTask([FromQuery] string _id, Task thisTask)
         {
             var project = _projectService.GetById(_id);
                 if(project == null) { return BadRequest("Not found!"); }
@@ -59,43 +76,54 @@ namespace WebApplication1.Controllers
 
             var user = _userService.GetByEmail(request.UserEmail);;
                 if(user == null ) { return BadRequest("User not found!"); }
-                else if (!project.Team.Exists(x => x.Equals(user.Id)))
+                else if (!project.Team.Exists(u => u.Equals(user.Id)))
                 {
                     return BadRequest("Sorry! User is not on the team!");
-                } 
-
-                //Todo: make this a function in Task Services
-            foreach (Task task in project.Tasks)
-            {
-                Console.WriteLine(task.Name);
-                if (task.Name == request.TaskName)
-                {
-                    task.Responsable = user.Id;
-                        _projectService.Update(_id, project);
-                    return Ok();
                 }
+            
+            var taskToAssign = project.Tasks.Find(t => t.Name == request.TaskName);
+            if (taskToAssign != null)
+            {
+                taskToAssign.Responsable = user.Id;
+                    _projectService.Update(project.Id, project);
+                     return Ok("User assigned to task!");
             }
+
             return BadRequest("Error finding the task!");
         }
-
+        
+        //Todo, a better way to pass the project and taskname, because i can have two projects with the same name and task name.
         [CustomAuthorize(Role.Admin)]
-        [HttpPatch("{projectName}/{taskName}/update")]
-        public ActionResult<Task> UpdateTask(string projectName, string taskName, UpdateTaskDTO thisTask) 
+        [HttpPatch("{projectName}/{taskName}")]
+        public ActionResult<Task> UpdateTask(string projectName, string taskName, UpdateTaskDTO request) 
         {
             var project = _projectService.GetByName(projectName);
             if (project == null) { return BadRequest("Not found!"); }
 
-            //Todo: make this a function in Task Services
-            foreach (Task task in project.Tasks)
+            var taskToUpdate = project.Tasks.Find(t => t.Name == taskName);
+            if (taskToUpdate != null) //Todo, create a service to update the task.
             {
-                if (task.Name == taskName)
-                {
-                    task.Name = thisTask.Name;
-                    task.Description = thisTask.Description;
-
-                        _projectService.Update(project.Id, project);
+                taskToUpdate.Name = request.Name;
+                taskToUpdate.Description = request.Description;
                     return Ok("Task updated!");
-                }
+            }
+            return BadRequest("Error finding the task!");
+        }
+
+
+        [CustomAuthorize(Role.Admin)]
+        [HttpDelete("{projectName}/{taskName}")]
+        public ActionResult Delete(string projectName, string taskName)
+        {
+            var project = _projectService.GetByName(projectName);
+                if (project == null) { return BadRequest("Not found!"); }
+
+            var taskToRemove = project.Tasks.Find(t => t.Name == taskName);
+                if(taskToRemove != null)
+            {
+                project.Tasks.Remove(taskToRemove);
+                _projectService.Update(project.Id, project);
+                    return Ok("Task deleted!");
             }
             return BadRequest("Error finding the task!");
         }
