@@ -66,8 +66,7 @@ namespace WebApplication1.Services
 
         public Project UpdateProject(string _id, ProjectInfoDTO thisProject)
         {
-            Update(_id, thisProject);
-            
+            Update(_id, thisProject);                  
             var updatedProject = GetById(_id);
             return updatedProject;              
         }

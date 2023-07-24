@@ -9,7 +9,8 @@ namespace WebApplication1.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
         public string Name { get; set; }
-        public string Description { get; set; }      
+        public string Description { get; set; }     
+        public DateOnly? DeadLine { get; set; }
         public bool? IsCompleted { get; set; }
         public string? Responsable { get; set; }
     }

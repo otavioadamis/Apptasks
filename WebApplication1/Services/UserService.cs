@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
+using WebApplication1.Authorization;
 using WebApplication1.Controllers;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
@@ -17,13 +18,14 @@ namespace WebApplication1.Services
     public class UserService
     {
         private readonly IMongoCollection<User> _users;
+        private readonly JwtUtils _jwtUtils;
 
-        public UserService(IMongoCollection<User> users)
+        public UserService(IMongoCollection<User> users, JwtUtils jwtUtils)
         {
             _users = users;
+            _jwtUtils = jwtUtils;
         }
-        
-        //Todo: create generic repositories to simple generic CRUD operations, so i avoid duplicating code.
+
         //CRUD
 
         //READ
@@ -49,11 +51,15 @@ namespace WebApplication1.Services
             _users.UpdateOne(o => o.Id == _id, updateName);
         }
         //DELETE
-        public void Delete(string name) => _users.DeleteOne(user => user.Name == name);
-                      
-        public User Signup(UserRegisterDTO thisUser)
+        public void Delete(string id) => _users.DeleteOne(user => user.Id == id);
+                   
+        public LoginResponseModel Signup(UserRegisterDTO thisUser)
         {
-           
+            var checkEmail = GetByEmail(thisUser.Email);
+            if (checkEmail != null)
+            {
+                throw new ArgumentException("This email has already been used!");
+            }
             thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
 
             var newUser = new User()
@@ -62,31 +68,62 @@ namespace WebApplication1.Services
                 Name = thisUser.Name,
                 Password = thisUser.Password,
                 Role = thisUser.Role
-            };
+            }; 
             
             Create(newUser);
-            return newUser;
+            string token = _jwtUtils.CreateToken(newUser);
+
+            var userModel = new UserResponseModel();
+            userModel = userModel.CreateModel(newUser);
+
+            var res = new LoginResponseModel
+            {
+                Token = token,
+                user = userModel
+            };
+
+            return res;
         }
        
-        public User Login(UserLoginDTO thisUser)
-        {
-           
+        public LoginResponseModel Login(UserLoginDTO thisUser)
+        {        
            var user = GetByEmail(thisUser.Email);                      
             if(user == null)
             {
-                return null;
+                throw new ArgumentException("Invalid credentials!");
             }
 
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
-             if(!isPasswordMatch) { return null; }
+             if(!isPasswordMatch) { throw new ArgumentException("Invalid credentials!"); }
 
-            return user;          
+            string token = _jwtUtils.CreateToken(user);
+
+            var userModel = new UserResponseModel();
+            userModel = userModel.CreateModel(user);
+
+            var res = new LoginResponseModel
+            {
+                Token = token,
+                user = userModel
+            };
+            return res;
+        }
+
+        public string ForgotPassword(string email)
+        {
+            var user = GetByEmail(email);
+            if (user == null) { throw new ArgumentException("User not found!"); }
+            
+            string token =
+                _jwtUtils.CreateToken(user);
+
+            return token;
         }
 
         public User UpdateInfo(string _id, UserUpdateDTO thisUser) 
         {
             var user = GetById(_id);
-                if (user == null) { return null; };
+                if (user == null) { throw new ArgumentException("User not found!"); };
 
             Update(_id, thisUser);
 
@@ -108,6 +145,13 @@ namespace WebApplication1.Services
             var updatedUser = GetById(_id);
             return updatedUser;
 
+        }
+        public void DeleteUser(string name)
+        {
+            var user = GetByName(name);
+            if (user == null) { throw new ArgumentException("User not found!"); }
+
+            Delete(user.Id);
         }
     }
 }

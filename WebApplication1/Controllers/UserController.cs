@@ -39,92 +39,67 @@ namespace WebApplication1.Controllers
         public ActionResult<User> GetByName(string name)
         {
             var user = _userService.GetByName(name);
-
-            if (user == null) { return NotFound(); }
+            if (user == null) { return NotFound("User not found!"); }
 
             return user;
         }
 
         //REGISTER NEW USER
         [HttpPost()]
-        public ActionResult<User> Signup(UserRegisterDTO thisUser)
+        public ActionResult<LoginResponseModel> Signup(UserRegisterDTO thisUser)
         {
-            var checkEmail = _userService.GetByEmail(thisUser.Email);
-            if (checkEmail != null) //existe um usuario com esse email ou nome
+            try
             {
-                return BadRequest("Email ja cadastrado");
+                var createdUser = _userService.Signup(thisUser);              
+                return Ok(createdUser);
             }
-
-            var createdUser =
-                _userService.Signup(thisUser);
-
-            string token = _jwtUtils.CreateToken(createdUser);
-
-            var response = new LoginResponseModel
-            {
-                Token = token,
-                Name = createdUser.Name
-            };
-
-            return Ok(response);
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         //LOGIN USER
         [HttpPost("login")]
         public ActionResult<LoginResponseModel> Login(UserLoginDTO thisUser)
         {
-
-            var loggedUser = _userService.Login(thisUser);
-            if (loggedUser == null) { return BadRequest("Invalid Password or Username"); }
-
-            string token =
-                _jwtUtils.CreateToken(loggedUser);
-
-            var response = new LoginResponseModel
+            try
             {
-                Token = token,
-                Name = loggedUser.Name
-            };
-
-            return Ok(response);
-
+                var loggedUser = _userService.Login(thisUser);
+                return Ok(loggedUser);
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         //Update an User
         [CustomAuthorize]
-        [HttpPatch()]
-        public ActionResult<User> UpdateInfo([FromQuery] string _id, UserUpdateDTO thisUser)
+        [HttpPatch("{userId}")]
+        public ActionResult<User> UpdateInfo(string userId, UserUpdateDTO thisUser)
         {
-            var updatedUser = 
-                _userService.UpdateInfo(_id, thisUser);
-
-            if(updatedUser == null) { return NotFound(); }
-
-            return Ok(updatedUser);
+            try 
+            {
+                var updatedUser = _userService.UpdateInfo(userId, thisUser);
+                return Ok(updatedUser);
+            }
+            catch (Exception ex) { return  BadRequest(ex.Message); }
         }
 
         //Forgot Password, send email (with jwt token) to the user
         [HttpPost()]
         [Route("forgotpassword")]
-        public ActionResult<User> ForgotPassword([FromBody] string thisEmail)
+        public ActionResult<string> ForgotPassword([FromBody] string thisEmail)
         {
-            var user = _userService.GetByEmail(thisEmail);
-
-            if (user == null) { return BadRequest("User not found"); }
-
-            string token =
-                _jwtUtils.CreateToken(user);
-
-
-            return Ok(token);
+            try
+            {
+                var tokenEmail = _userService.ForgotPassword(thisEmail);
+                return Ok(tokenEmail);
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         //Reset the user password, authorized with JwT Token
+        //Todo, put the logic in services
         [HttpPost("resetpassword")]
         [CustomAuthorize]
         public ActionResult<User> ResetPassword(UserResetPwDTO thisUser)
         {
-
             var user = HttpContext.Items["User"] as User;
             if (user == null) { return BadRequest("Invalid Credentials"); }
 
@@ -133,8 +108,7 @@ namespace WebApplication1.Controllers
 
             if(thisUser.Password != thisUser.ConfirmPassword) { return BadRequest("Confirm Password and Passoword fiels must be equal"); }
 
-            _userService.ChangePw(user.Id, thisUser);
-        
+            _userService.ChangePw(user.Id, thisUser);        
             return Ok("Password Changed!");
         }
 
@@ -144,13 +118,12 @@ namespace WebApplication1.Controllers
         [HttpDelete("{name}")]
         public ActionResult<User> Delete(string name)
         {
-            var user = _userService.GetByName(name);
-
-            if (user == null) { return NotFound(); }
-
-            _userService.Delete(user.Name);
-            
-            return NoContent();
+            try
+            {
+                _userService.DeleteUser(name);
+                return Ok("User has been deleted!");
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
     }
 }

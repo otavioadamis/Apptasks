@@ -25,8 +25,15 @@ namespace WebApplication1.Services
                 Id = ObjectId.GenerateNewId().ToString(),
                 Name = thisTask.Name,
                 Description = thisTask.Description,
-                IsCompleted = false
-            };               
+                IsCompleted = false,
+                DeadLine = thisTask.DeadLine
+            };
+/*            var year = int.Parse(thisTask.DeadLine.Split(',')[2]);
+            var month = int.Parse(thisTask.DeadLine.Split(',')[1]);
+            var day = int.Parse(thisTask.DeadLine.Split(',')[0]);
+
+            var deadline = new DateOnly(year, month, day);
+            newTask.DeadLine = deadline;*/
             return newTask;
         }
     }

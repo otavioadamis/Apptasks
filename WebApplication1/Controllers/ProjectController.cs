@@ -27,7 +27,7 @@ namespace WebApplication1.Controllers
             this._authService = authService;
         }
 
-        [HttpGet("projects")]
+        [HttpGet()]
         public ActionResult<List<Project>> Get()
         {
             return _projectService.Get();
@@ -46,30 +46,30 @@ namespace WebApplication1.Controllers
         }
 
         [CustomAuthorize(Role.Admin)]
-        [HttpPatch()]
-        public ActionResult<Project> Update(string _id, ProjectInfoDTO thisProject)
+        [HttpPatch("projects/{projectId}")]
+        public ActionResult<Project> Update(string projectId, ProjectInfoDTO thisProject)
         {
             var user = HttpContext.Items["User"] as User;
 
-            var project = _projectService.GetById(_id);
+            var project = _projectService.GetById(projectId);
             if (project == null) { return BadRequest("Project not found!"); }
             else if (user.Id != project.CreatorId)
             {
                 return BadRequest("Sorry! You are not the owner of this project!");
             }
-            _projectService.UpdateProject(_id, thisProject);
+            _projectService.UpdateProject(projectId, thisProject);
             return Ok("Projeto atualizado!");
         }
 
         [CustomAuthorize(Role.Admin)]
-        [HttpDelete()]
-        public ActionResult Delete(ProjectDelDTO request)
+        [HttpDelete("/projects/{projectId}")]
+        public ActionResult Delete(string projectId ,ProjectDelDTO request)
         {
             var user = HttpContext.Items["User"] as User;
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
                 if (!isPasswordMatch) { return BadRequest("Wrong password"); }
 
-            var project = _projectService.GetByName(request.ProjectName);
+            var project = _projectService.GetById(projectId);
             if (project == null) { return BadRequest("Cant find this project!"); }
 
             _projectService.Delete(project.Id);
@@ -77,7 +77,7 @@ namespace WebApplication1.Controllers
         }
 
         [CustomAuthorize]
-        [HttpGet("{name}")]
+        [HttpGet("projects/{name}")]
         public ActionResult<Project> Get(string name) 
         {
             var project = _projectService.GetByName(name);

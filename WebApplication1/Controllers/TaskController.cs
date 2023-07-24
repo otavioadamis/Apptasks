@@ -8,6 +8,7 @@ using WebApplication1.Models.DTOs;
 using WebApplication1.Models.DTOs.TaskTO_s;
 using WebApplication1.Services;
 using Task = WebApplication1.Models.Task;
+using WebApplication1.Helpers;
 
 namespace WebApplication1.Controllers
 {
@@ -33,14 +34,14 @@ namespace WebApplication1.Controllers
 
         }
 
-        [HttpGet("{projectName}/{taskName}")]
+        [HttpGet("projects/{projectId}/tasks/{taskId}")]
         [CustomAuthorize]
-        public ActionResult<Task> GetTask(string projectName, string taskName)
+        public ActionResult<Task> GetTask(string projectId, string taskId)
         {
-            var project = _projectService.GetByName(projectName);
+            var project = _projectService.GetById(projectId);
                 if (project == null) { return BadRequest("Not found!"); }
 
-            var taskToFind = project.Tasks.Find(t => t.Name == taskName);
+            var taskToFind = project.Tasks.Find(t => t.Id == taskId);
                 if (taskToFind != null) 
             {
                 return Ok(taskToFind);
@@ -48,11 +49,11 @@ namespace WebApplication1.Controllers
             return BadRequest("Cant find this task!");
         }
 
-        [HttpPatch("addtask")]
+        [HttpPut("projects/{projectId}")]
         [CustomAuthorize(Role.Admin)]
-        public ActionResult<Task> AddTask([FromQuery] string _id, Task thisTask)
+        public ActionResult<Task> AddTask(string projectId, Task thisTask)
         {
-            var project = _projectService.GetById(_id);
+            var project = _projectService.GetById(projectId);
                 if(project == null) { return BadRequest("Not found!"); }
 
             if (project.Tasks == null)
@@ -62,16 +63,16 @@ namespace WebApplication1.Controllers
 
             var createdTask = _taskService.CreateTask(thisTask);
             project.Tasks.Add(createdTask);
-                _projectService.Update(_id, project);
+                _projectService.Update(projectId, project);
 
             return Ok(createdTask);
         }
 
-        [HttpPatch("assign")]
+        [HttpPatch("projects/{projectId}/tasks/{taskId}/assign")]
         [CustomAuthorize(Role.Admin)]
-        public ActionResult<Task> AssignTask([FromQuery]string _id, AssignTaskModel request)
+        public ActionResult<Task> AssignTask(string projectId, string taskId, AssignTaskModel request)
         {
-            var project = _projectService.GetById(_id);
+            var project = _projectService.GetById(projectId);
             if (project == null) { return BadRequest("Not found!"); }
 
             var user = _userService.GetByEmail(request.UserEmail);;
@@ -81,27 +82,25 @@ namespace WebApplication1.Controllers
                     return BadRequest("Sorry! User is not on the team!");
                 }
             
-            var taskToAssign = project.Tasks.Find(t => t.Name == request.TaskName);
+            var taskToAssign = project.Tasks.Find(t => t.Id == taskId);
             if (taskToAssign != null)
             {
                 taskToAssign.Responsable = user.Id;
                     _projectService.Update(project.Id, project);
                      return Ok("User assigned to task!");
             }
-
             return BadRequest("Error finding the task!");
         }
         
-        //Todo, a better way to pass the project and taskname, because i can have two projects with the same name and task name.
         [CustomAuthorize(Role.Admin)]
-        [HttpPatch("{projectName}/{taskName}")]
-        public ActionResult<Task> UpdateTask(string projectName, string taskName, UpdateTaskDTO request) 
+        [HttpPatch("projects/{projectId}/tasks/{taskId}")]
+        public ActionResult<Task> UpdateTask(string projectId, string taskId, UpdateTaskDTO request) 
         {
-            var project = _projectService.GetByName(projectName);
+            var project = _projectService.GetById(projectId);
             if (project == null) { return BadRequest("Not found!"); }
 
-            var taskToUpdate = project.Tasks.Find(t => t.Name == taskName);
-            if (taskToUpdate != null) //Todo, create a service to update the task.
+            var taskToUpdate = project.Tasks.Find(t => t.Id == taskId);
+            if (taskToUpdate != null)
             {
                 taskToUpdate.Name = request.Name;
                 taskToUpdate.Description = request.Description;
@@ -110,15 +109,31 @@ namespace WebApplication1.Controllers
             return BadRequest("Error finding the task!");
         }
 
+        [HttpPatch("projects/{projectId}/tasks/{taskId}/markcomplete")]
+        [CustomAuthorize]
+        public ActionResult<Task> IsCompleted(string projectId, string taskId, TaskMarkDTO request)
+        {
+            var project = _projectService.GetById(projectId);
+            if (project == null) { return BadRequest("Not found!"); }
+            
+            var task = project.Tasks.Find(t => t.Id == taskId);
+            if (task != null)
+            {
+                task.IsCompleted = request.IsCompleted;
+                _projectService.Update(projectId, project);
+                return Ok(project);
+            }
+            return BadRequest("Error finding the task!");
+        }
 
         [CustomAuthorize(Role.Admin)]
-        [HttpDelete("{projectName}/{taskName}")]
-        public ActionResult Delete(string projectName, string taskName)
+        [HttpDelete("projects/{projectId}/tasks/{taskId}")]
+        public ActionResult Delete(string projectId, string taskId)
         {
-            var project = _projectService.GetByName(projectName);
+            var project = _projectService.GetById(projectId);
                 if (project == null) { return BadRequest("Not found!"); }
 
-            var taskToRemove = project.Tasks.Find(t => t.Name == taskName);
+            var taskToRemove = project.Tasks.Find(t => t.Id == taskId);
                 if(taskToRemove != null)
             {
                 project.Tasks.Remove(taskToRemove);

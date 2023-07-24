@@ -23,10 +23,13 @@ namespace WebApplication1
 
         // Add services to the container.           
         builder.Services.AddRazorPages();
-            builder.Services.AddControllers().AddJsonOptions(x =>
+            builder.Services.AddControllers().AddJsonOptions(options =>
             {
-                // serialize enums as strings in api responses (e.g. Role)
-                x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                // Serialize enums as strings in API responses (e.g., Role)
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+
+                // Add custom converter for System.DateOnly
+                options.JsonSerializerOptions.Converters.Add(new DateOnlyConverter());
             });
 
             builder.Services.AddScoped<Utils>();
