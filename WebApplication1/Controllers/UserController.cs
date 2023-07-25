@@ -28,6 +28,7 @@ namespace WebApplication1.Controllers
             this._authService = authService;
         }
 
+        //Todo, update this method to send just the ResponseModels from all users. 
         [CustomAuthorize(Role.Admin)]
         [HttpGet()]
         public ActionResult<List<User>> Get()
@@ -35,13 +36,15 @@ namespace WebApplication1.Controllers
             return _userService.Get();
         }
 
-        [HttpGet("{name}", Name = "GetUser")]
-        public ActionResult<User> GetByName(string name)
+        [HttpGet("{id}")]
+        public ActionResult<UserResponseModel> GetById(string id)
         {
-            var user = _userService.GetByName(name);
-            if (user == null) { return NotFound("User not found!"); }
-
-            return user;
+            try
+            {
+                var userModel = _userService.GetUserById(id);
+                return userModel;
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         //REGISTER NEW USER
@@ -98,18 +101,17 @@ namespace WebApplication1.Controllers
         //Todo, put the logic in services
         [HttpPost("resetpassword")]
         [CustomAuthorize]
-        public ActionResult<User> ResetPassword(UserResetPwDTO thisUser)
+        public ActionResult<UserResponseModel> ResetPassword(UserResetPwDTO thisUser)
         {
             var user = HttpContext.Items["User"] as User;
-            if (user == null) { return BadRequest("Invalid Credentials"); }
+                if (user == null) { return BadRequest("Invalid Credentials"); }
+           try
+            {
+                var userNewPw = _userService.ChangePw(user.Id, thisUser);
+                return Ok(userNewPw);
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
 
-            bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
-                if (isPasswordMatch) { return BadRequest("Password needs to be different than the current password"); }
-
-            if(thisUser.Password != thisUser.ConfirmPassword) { return BadRequest("Confirm Password and Passoword fiels must be equal"); }
-
-            _userService.ChangePw(user.Id, thisUser);        
-            return Ok("Password Changed!");
         }
 
         //DELETE AN USER

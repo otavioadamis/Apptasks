@@ -38,109 +38,73 @@ namespace WebApplication1.Controllers
         [CustomAuthorize]
         public ActionResult<Task> GetTask(string projectId, string taskId)
         {
-            var project = _projectService.GetById(projectId);
-                if (project == null) { return BadRequest("Not found!"); }
-
-            var taskToFind = project.Tasks.Find(t => t.Id == taskId);
-                if (taskToFind != null) 
+            try
             {
-                return Ok(taskToFind);
+                var task = _taskService.GetTask(projectId, taskId);
+                return task;
             }
-            return BadRequest("Cant find this task!");
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         [HttpPut("projects/{projectId}")]
         [CustomAuthorize(Role.Admin)]
         public ActionResult<Task> AddTask(string projectId, Task thisTask)
         {
-            var project = _projectService.GetById(projectId);
-                if(project == null) { return BadRequest("Not found!"); }
-
-            if (project.Tasks == null)
+            try
             {
-                project.Tasks = new List<Task>();
+                var createdTask = _taskService.CreateTask(projectId, thisTask);
+                return Ok(createdTask);
             }
-
-            var createdTask = _taskService.CreateTask(thisTask);
-            project.Tasks.Add(createdTask);
-                _projectService.Update(projectId, project);
-
-            return Ok(createdTask);
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         [HttpPatch("projects/{projectId}/tasks/{taskId}/assign")]
         [CustomAuthorize(Role.Admin)]
         public ActionResult<Task> AssignTask(string projectId, string taskId, AssignTaskModel request)
         {
-            var project = _projectService.GetById(projectId);
-            if (project == null) { return BadRequest("Not found!"); }
-
-            var user = _userService.GetByEmail(request.UserEmail);;
-                if(user == null ) { return BadRequest("User not found!"); }
-                else if (!project.Team.Exists(u => u.Equals(user.Id)))
-                {
-                    return BadRequest("Sorry! User is not on the team!");
-                }
-            
-            var taskToAssign = project.Tasks.Find(t => t.Id == taskId);
-            if (taskToAssign != null)
+            try
             {
-                taskToAssign.Responsable = user.Id;
-                    _projectService.Update(project.Id, project);
-                     return Ok("User assigned to task!");
+                var assignedTask = _taskService.AssignTask(projectId, taskId, request);
+                return Ok(assignedTask);
             }
-            return BadRequest("Error finding the task!");
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
         
         [CustomAuthorize(Role.Admin)]
         [HttpPatch("projects/{projectId}/tasks/{taskId}")]
         public ActionResult<Task> UpdateTask(string projectId, string taskId, UpdateTaskDTO request) 
         {
-            var project = _projectService.GetById(projectId);
-            if (project == null) { return BadRequest("Not found!"); }
-
-            var taskToUpdate = project.Tasks.Find(t => t.Id == taskId);
-            if (taskToUpdate != null)
+            try
             {
-                taskToUpdate.Name = request.Name;
-                taskToUpdate.Description = request.Description;
-                    return Ok("Task updated!");
+                var updatedTask = _taskService.Update(projectId, taskId, request);
+                return Ok(updatedTask);
             }
-            return BadRequest("Error finding the task!");
+            catch(Exception ex) { return BadRequest(ex.Message); }
         }
 
         [HttpPatch("projects/{projectId}/tasks/{taskId}/markcomplete")]
         [CustomAuthorize]
         public ActionResult<Task> IsCompleted(string projectId, string taskId, TaskMarkDTO request)
         {
-            var project = _projectService.GetById(projectId);
-            if (project == null) { return BadRequest("Not found!"); }
-            
-            var task = project.Tasks.Find(t => t.Id == taskId);
-            if (task != null)
+            var user = HttpContext.Items["User"] as User;
+            try
             {
-                task.IsCompleted = request.IsCompleted;
-                _projectService.Update(projectId, project);
-                return Ok(project);
+                var taskIsCompleted = _taskService.IsCompleted(projectId, taskId, request, user.Id);
+                return Ok(taskIsCompleted);
             }
-            return BadRequest("Error finding the task!");
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         [CustomAuthorize(Role.Admin)]
         [HttpDelete("projects/{projectId}/tasks/{taskId}")]
         public ActionResult Delete(string projectId, string taskId)
         {
-            var project = _projectService.GetById(projectId);
-                if (project == null) { return BadRequest("Not found!"); }
-
-            var taskToRemove = project.Tasks.Find(t => t.Id == taskId);
-                if(taskToRemove != null)
+            try
             {
-                project.Tasks.Remove(taskToRemove);
-                _projectService.Update(project.Id, project);
-                    return Ok("Task deleted!");
+                var deleteTask = _taskService.Delete(projectId, taskId);
+                return Ok(deleteTask);           
             }
-            return BadRequest("Error finding the task!");
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
     }
   }

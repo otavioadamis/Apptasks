@@ -52,7 +52,18 @@ namespace WebApplication1.Services
         }
         //DELETE
         public void Delete(string id) => _users.DeleteOne(user => user.Id == id);
-                   
+         
+        //Get an User by Id (sending a model)
+        public UserResponseModel GetUserById(string _id)
+        {
+            var user = GetById(_id);
+                if (user == null) { throw new ArgumentException("User id not found!"); }
+            
+            var userModel = new UserResponseModel();
+            userModel = userModel.CreateModel(user);
+            return userModel;
+        }
+
         public LoginResponseModel Signup(UserRegisterDTO thisUser)
         {
             var checkEmail = GetByEmail(thisUser.Email);
@@ -132,18 +143,28 @@ namespace WebApplication1.Services
 
         }
 
-        public User ChangePw(string _id, UserResetPwDTO thisUser)
+        public UserResponseModel ChangePw(string _id, UserResetPwDTO thisUser)
         {
-            var user = GetById(_id);
-            if (user == null) { return null; };
 
+            var user = GetById(_id);
+                if (user == null) { throw new ArgumentException("Cant find user!"); };
+
+            bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
+            if (isPasswordMatch) { throw new ArgumentException("Password needs to be different than the current password"); }
+
+            if (thisUser.Password != thisUser.ConfirmPassword) { throw new ArgumentException("Confirm Password and Passoword fiels must be equal"); }
+    
             thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
 
             var updatePw = Builders<User>.Update.Set(o => o.Password, thisUser.Password);
             _users.UpdateOne(o => o.Id == _id, updatePw);
 
             var updatedUser = GetById(_id);
-            return updatedUser;
+            
+            var userModel = new UserResponseModel();
+                userModel = userModel.CreateModel(updatedUser);
+            
+            return userModel;
 
         }
         public void DeleteUser(string name)

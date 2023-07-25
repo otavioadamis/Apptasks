@@ -33,16 +33,25 @@ namespace WebApplication1.Controllers
             return _projectService.Get();
         }
 
+        [CustomAuthorize]
+        [HttpGet("projects/{projectId}")]
+        public ActionResult<Project> Get(string projectId)
+        {
+            var project = _projectService.GetProjectById(projectId);
+            return Ok(project);
+        }
+
         [CustomAuthorize(Role.Admin)]
         [HttpPost()]
         public ActionResult<Project> Create(Project thisProject)
         {
             var user = HttpContext.Items["User"] as User;
-            if (user == null) { return BadRequest("An error ocurred, try again."); }
-
-            var createdProject = _projectService.CreateProject(user.Id, thisProject);
-
-            return Ok(createdProject);
+            try
+            {
+                var createdProject = _projectService.CreateProject(user.Id, thisProject);
+                return Ok(createdProject);
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         [CustomAuthorize(Role.Admin)]
@@ -50,40 +59,25 @@ namespace WebApplication1.Controllers
         public ActionResult<Project> Update(string projectId, ProjectInfoDTO thisProject)
         {
             var user = HttpContext.Items["User"] as User;
-
-            var project = _projectService.GetById(projectId);
-            if (project == null) { return BadRequest("Project not found!"); }
-            else if (user.Id != project.CreatorId)
+            try
             {
-                return BadRequest("Sorry! You are not the owner of this project!");
+                _projectService.UpdateProject(user.Id, projectId, thisProject);
+                return Ok("Projeto atualizado!");
             }
-            _projectService.UpdateProject(projectId, thisProject);
-            return Ok("Projeto atualizado!");
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
 
         [CustomAuthorize(Role.Admin)]
-        [HttpDelete("/projects/{projectId}")]
+        [HttpDelete("projects/{projectId}")]
         public ActionResult Delete(string projectId ,ProjectDelDTO request)
         {
             var user = HttpContext.Items["User"] as User;
-            bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
-                if (!isPasswordMatch) { return BadRequest("Wrong password"); }
-
-            var project = _projectService.GetById(projectId);
-            if (project == null) { return BadRequest("Cant find this project!"); }
-
-            _projectService.Delete(project.Id);
-            return Ok("Project deleted!");
-        }
-
-        [CustomAuthorize]
-        [HttpGet("projects/{name}")]
-        public ActionResult<Project> Get(string name) 
-        {
-            var project = _projectService.GetByName(name);
-            if (project == null) { return BadRequest("Project not finded!"); }
-
-            return Ok(project);                
+            try
+            {
+                var projectDeleted = _projectService.DeleteProject(user.Id, projectId, request);
+                return Ok(projectDeleted);
+            }
+            catch (Exception ex) { return BadRequest(ex.Message); }
         }
     }
 }

@@ -6,6 +6,5 @@ namespace WebApplication1.Models.DTOs
     {
         [Required]
         public string UserEmail { get; set; }
-
     }
 }
