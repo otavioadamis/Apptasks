@@ -8,6 +8,7 @@ using System.Text;
 using System.Xml.Linq;
 using WebApplication1.Authorization;
 using WebApplication1.Controllers;
+using WebApplication1.Exceptions;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 
@@ -57,8 +58,8 @@ namespace WebApplication1.Services
         public UserResponseModel GetUserById(string _id)
         {
             var user = GetById(_id);
-                if (user == null) { throw new ArgumentException("User id not found!"); }
-            
+                if(user == null) { throw new UserFriendlyException("User not found!"); }
+
             var userModel = new UserResponseModel();
             userModel = userModel.CreateModel(user);
             return userModel;
@@ -69,7 +70,7 @@ namespace WebApplication1.Services
             var checkEmail = GetByEmail(thisUser.Email);
             if (checkEmail != null)
             {
-                throw new ArgumentException("This email has already been used!");
+                throw new UserFriendlyException("Sorry! This email has already been used!");
             }
             thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
 
@@ -101,11 +102,11 @@ namespace WebApplication1.Services
            var user = GetByEmail(thisUser.Email);                      
             if(user == null)
             {
-                throw new ArgumentException("Invalid credentials!");
+                throw new UserFriendlyException("Invalid credentials!");
             }
 
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
-             if(!isPasswordMatch) { throw new ArgumentException("Invalid credentials!"); }
+             if(!isPasswordMatch) { throw new UserFriendlyException("Invalid credentials!"); }
 
             string token = _jwtUtils.CreateToken(user);
 
@@ -123,7 +124,7 @@ namespace WebApplication1.Services
         public string ForgotPassword(string email)
         {
             var user = GetByEmail(email);
-            if (user == null) { throw new ArgumentException("User not found!"); }
+            if (user == null) { throw new UserFriendlyException("User not found!"); }
             
             string token =
                 _jwtUtils.CreateToken(user);
@@ -134,7 +135,7 @@ namespace WebApplication1.Services
         public User UpdateInfo(string _id, UserUpdateDTO thisUser) 
         {
             var user = GetById(_id);
-                if (user == null) { throw new ArgumentException("User not found!"); };
+                if (user == null) { throw new UserFriendlyException("User not found!"); };
 
             Update(_id, thisUser);
 
@@ -147,12 +148,12 @@ namespace WebApplication1.Services
         {
 
             var user = GetById(_id);
-                if (user == null) { throw new ArgumentException("Cant find user!"); };
+                if (user == null) { throw new UserFriendlyException("Cant find user!"); };
 
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
-            if (isPasswordMatch) { throw new ArgumentException("Password needs to be different than the current password"); }
+            if (isPasswordMatch) { throw new UserFriendlyException("Password needs to be different than the current password"); }
 
-            if (thisUser.Password != thisUser.ConfirmPassword) { throw new ArgumentException("Confirm Password and Passoword fiels must be equal"); }
+            if (thisUser.Password != thisUser.ConfirmPassword) { throw new UserFriendlyException("Confirm Password and Passoword fiels must be equal"); }
     
             thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
 
@@ -170,7 +171,7 @@ namespace WebApplication1.Services
         public void DeleteUser(string name)
         {
             var user = GetByName(name);
-            if (user == null) { throw new ArgumentException("User not found!"); }
+            if (user == null) { throw new UserFriendlyException("User not found!"); }
 
             Delete(user.Id);
         }

@@ -3,6 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using WebApplication1.Exceptions;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 using WebApplication1.Models.DTOs.TaskTO_s;
@@ -24,21 +25,21 @@ namespace WebApplication1.Services
         public Task GetTask(string projectId, string taskId)
         {
             var project = _projectService.GetById(projectId);
-            if (project == null) { throw new ArgumentException("Project not found!"); }
+            if (project == null) { throw new UserFriendlyException("Project not found!"); }
 
             var taskToFind = project.Tasks.Find(t => t.Id == taskId);
             if (taskToFind != null)
             {
                 return taskToFind;
             }
-            throw new ArgumentException("Cant find this task!");
+            throw new UserFriendlyException("Cant find this task!");
         }
 
         public Task CreateTask(string projectId, Task thisTask)
         {
 
             var project = _projectService.GetById(projectId);
-            if (project == null) { throw new ArgumentException("Project not found!"); }
+            if (project == null) { throw new UserFriendlyException("Project not found!"); }
 
             if (project.Tasks == null)
             {
@@ -63,14 +64,14 @@ namespace WebApplication1.Services
         public Task AssignTask(string projectId, string taskId, AssignTaskModel request) 
         {
             var project = _projectService.GetById(projectId);
-            if (project == null) { throw new ArgumentException("Not found!"); }
+            if (project == null) { throw new UserFriendlyException("Not found!"); }
 
             var user = _userService.GetByEmail(request.UserEmail); ;
-            if (user == null) { throw new ArgumentException("User not found!"); }
+            if (user == null) { throw new UserFriendlyException("User not found!"); }
             
             else if (!project.Team.Exists(u => u.Equals(user.Id)))
             {
-                throw new ArgumentException("Sorry! User is not on the team!");
+                throw new UserFriendlyException("Sorry! User is not on the team!");
             }
             
             var taskToAssign = project.Tasks.Find(t => t.Id == taskId);
@@ -81,13 +82,13 @@ namespace WebApplication1.Services
                 _projectService.Update(project.Id, project);
                     return taskToAssign;
             }
-            throw new ArgumentException("Error finding the task!");
+            throw new UserFriendlyException("Error finding the task!");
         }
 
         public Task Update(string projectId, string taskId, UpdateTaskDTO request)
         {
             var project = _projectService.GetById(projectId);
-            if (project == null) { throw new ArgumentException("Not found!"); }
+            if (project == null) { throw new UserFriendlyException("Not found!"); }
 
             var taskToUpdate = project.Tasks.Find(t => t.Id == taskId);
             if (taskToUpdate != null)
@@ -96,29 +97,29 @@ namespace WebApplication1.Services
                 taskToUpdate.Description = request.Description;
                 return taskToUpdate;
             }
-            throw new ArgumentException("Error finding the task!");
+            throw new UserFriendlyException("Error finding the task!");
         }
 
         public Task IsCompleted(string projectId, string taskId, TaskMarkDTO request, string userId)
         {
             var project = _projectService.GetById(projectId);
-            if (project == null) { throw new ArgumentException("Not found!"); }
+            if (project == null) { throw new UserFriendlyException("Not found!"); }
 
             var task = project.Tasks.Find(t => t.Id == taskId);
-            if(task.Responsable != userId) { throw new ArgumentException("Sorry! Only the responsable of the task can mark as completed or not!"); }
+            if(task.Responsable != userId) { throw new UserFriendlyException("Sorry! Only the responsable of the task can mark as completed or not!"); }
             if (task != null)
             {
                 task.IsCompleted = request.IsCompleted;
                 _projectService.Update(projectId, project);
                 return task;
             }
-            throw new ArgumentException("Error finding the task!");
+            throw new UserFriendlyException("Error finding the task!");
         }
 
         public Project Delete(string projectId, string taskId)
         {
             var project = _projectService.GetById(projectId);
-            if (project == null) { throw new ArgumentException("Not found!"); }
+            if (project == null) { throw new UserFriendlyException("Not found!"); }
 
             var taskToRemove = project.Tasks.Find(t => t.Id == taskId);
             if (taskToRemove != null)
@@ -127,7 +128,7 @@ namespace WebApplication1.Services
                 _projectService.Update(project.Id, project);
                     return project;
             }
-            throw new ArgumentException("Error finding the task!");
+            throw new UserFriendlyException("Error finding the task!");
         }
     }
 }

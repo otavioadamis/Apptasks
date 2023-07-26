@@ -46,12 +46,8 @@ namespace WebApplication1.Controllers
         public ActionResult<Project> Create(Project thisProject)
         {
             var user = HttpContext.Items["User"] as User;
-            try
-            {
-                var createdProject = _projectService.CreateProject(user.Id, thisProject);
-                return Ok(createdProject);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var createdProject = _projectService.CreateProject(user.Id, thisProject);
+            return Ok(createdProject);
         }
 
         [CustomAuthorize(Role.Admin)]
@@ -59,12 +55,8 @@ namespace WebApplication1.Controllers
         public ActionResult<Project> Update(string projectId, ProjectInfoDTO thisProject)
         {
             var user = HttpContext.Items["User"] as User;
-            try
-            {
-                _projectService.UpdateProject(user.Id, projectId, thisProject);
-                return Ok("Projeto atualizado!");
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            _projectService.UpdateProject(user.Id, projectId, thisProject);
+            return Ok("Projeto atualizado!");
         }
 
         [CustomAuthorize(Role.Admin)]
@@ -72,12 +64,8 @@ namespace WebApplication1.Controllers
         public ActionResult Delete(string projectId ,ProjectDelDTO request)
         {
             var user = HttpContext.Items["User"] as User;
-            try
-            {
-                var projectDeleted = _projectService.DeleteProject(user.Id, projectId, request);
-                return Ok(projectDeleted);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var projectDeleted = _projectService.DeleteProject(user.Id, projectId, request);
+            return Ok(projectDeleted);
         }
     }
 }

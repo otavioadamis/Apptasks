@@ -39,36 +39,24 @@ namespace WebApplication1.Controllers
         [HttpGet("{id}")]
         public ActionResult<UserResponseModel> GetById(string id)
         {
-            try
-            {
-                var userModel = _userService.GetUserById(id);
-                return userModel;
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var userModel = _userService.GetUserById(id);
+            return userModel;     
         }
 
         //REGISTER NEW USER
         [HttpPost()]
         public ActionResult<LoginResponseModel> Signup(UserRegisterDTO thisUser)
-        {
-            try
-            {
-                var createdUser = _userService.Signup(thisUser);              
-                return Ok(createdUser);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+        {                     
+            var createdUser = _userService.Signup(thisUser);              
+            return Ok(createdUser);           
         }
 
         //LOGIN USER
         [HttpPost("login")]
         public ActionResult<LoginResponseModel> Login(UserLoginDTO thisUser)
         {
-            try
-            {
-                var loggedUser = _userService.Login(thisUser);
-                return Ok(loggedUser);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var loggedUser = _userService.Login(thisUser);
+            return Ok(loggedUser);           
         }
 
         //Update an User
@@ -76,12 +64,8 @@ namespace WebApplication1.Controllers
         [HttpPatch("{userId}")]
         public ActionResult<User> UpdateInfo(string userId, UserUpdateDTO thisUser)
         {
-            try 
-            {
-                var updatedUser = _userService.UpdateInfo(userId, thisUser);
-                return Ok(updatedUser);
-            }
-            catch (Exception ex) { return  BadRequest(ex.Message); }
+            var updatedUser = _userService.UpdateInfo(userId, thisUser);
+            return Ok(updatedUser);
         }
 
         //Forgot Password, send email (with jwt token) to the user
@@ -89,12 +73,10 @@ namespace WebApplication1.Controllers
         [Route("forgotpassword")]
         public ActionResult<string> ForgotPassword([FromBody] string thisEmail)
         {
-            try
-            {
-                var tokenEmail = _userService.ForgotPassword(thisEmail);
-                return Ok(tokenEmail);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+
+            var tokenEmail = _userService.ForgotPassword(thisEmail);
+            return Ok(tokenEmail);
+
         }
 
         //Reset the user password, authorized with JwT Token
@@ -103,15 +85,11 @@ namespace WebApplication1.Controllers
         [CustomAuthorize]
         public ActionResult<UserResponseModel> ResetPassword(UserResetPwDTO thisUser)
         {
-            var user = HttpContext.Items["User"] as User;
-                if (user == null) { return BadRequest("Invalid Credentials"); }
-           try
-            {
-                var userNewPw = _userService.ChangePw(user.Id, thisUser);
-                return Ok(userNewPw);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+        var user = HttpContext.Items["User"] as User;
+            if (user == null) { return BadRequest("Invalid Credentials"); }
 
+        var userNewPw = _userService.ChangePw(user.Id, thisUser);
+            return Ok(userNewPw);
         }
 
         //DELETE AN USER
@@ -120,12 +98,8 @@ namespace WebApplication1.Controllers
         [HttpDelete("{name}")]
         public ActionResult<User> Delete(string name)
         {
-            try
-            {
-                _userService.DeleteUser(name);
-                return Ok("User has been deleted!");
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            _userService.DeleteUser(name);
+            return Ok("User has been deleted!");
         }
     }
 }

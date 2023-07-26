@@ -38,48 +38,32 @@ namespace WebApplication1.Controllers
         [CustomAuthorize]
         public ActionResult<Task> GetTask(string projectId, string taskId)
         {
-            try
-            {
-                var task = _taskService.GetTask(projectId, taskId);
-                return task;
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var task = _taskService.GetTask(projectId, taskId);
+            return task;
         }
 
         [HttpPut("projects/{projectId}")]
         [CustomAuthorize(Role.Admin)]
         public ActionResult<Task> AddTask(string projectId, Task thisTask)
         {
-            try
-            {
-                var createdTask = _taskService.CreateTask(projectId, thisTask);
-                return Ok(createdTask);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var createdTask = _taskService.CreateTask(projectId, thisTask);
+            return Ok(createdTask);
         }
 
         [HttpPatch("projects/{projectId}/tasks/{taskId}/assign")]
         [CustomAuthorize(Role.Admin)]
         public ActionResult<Task> AssignTask(string projectId, string taskId, AssignTaskModel request)
         {
-            try
-            {
-                var assignedTask = _taskService.AssignTask(projectId, taskId, request);
-                return Ok(assignedTask);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var assignedTask = _taskService.AssignTask(projectId, taskId, request);
+            return Ok(assignedTask);
         }
         
         [CustomAuthorize(Role.Admin)]
         [HttpPatch("projects/{projectId}/tasks/{taskId}")]
         public ActionResult<Task> UpdateTask(string projectId, string taskId, UpdateTaskDTO request) 
         {
-            try
-            {
-                var updatedTask = _taskService.Update(projectId, taskId, request);
-                return Ok(updatedTask);
-            }
-            catch(Exception ex) { return BadRequest(ex.Message); }
+            var updatedTask = _taskService.Update(projectId, taskId, request);
+            return Ok(updatedTask);
         }
 
         [HttpPatch("projects/{projectId}/tasks/{taskId}/markcomplete")]
@@ -87,24 +71,16 @@ namespace WebApplication1.Controllers
         public ActionResult<Task> IsCompleted(string projectId, string taskId, TaskMarkDTO request)
         {
             var user = HttpContext.Items["User"] as User;
-            try
-            {
-                var taskIsCompleted = _taskService.IsCompleted(projectId, taskId, request, user.Id);
-                return Ok(taskIsCompleted);
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var taskIsCompleted = _taskService.IsCompleted(projectId, taskId, request, user.Id);
+            return Ok(taskIsCompleted);
         }
 
         [CustomAuthorize(Role.Admin)]
         [HttpDelete("projects/{projectId}/tasks/{taskId}")]
         public ActionResult Delete(string projectId, string taskId)
         {
-            try
-            {
-                var deleteTask = _taskService.Delete(projectId, taskId);
-                return Ok(deleteTask);           
-            }
-            catch (Exception ex) { return BadRequest(ex.Message); }
+            var deleteTask = _taskService.Delete(projectId, taskId);
+            return Ok(deleteTask);           
         }
     }
   }

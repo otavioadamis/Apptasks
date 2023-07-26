@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using System.Security.Cryptography;
+using WebApplication1.Exceptions;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 using WebApplication1.Models.DTOs.ProjectTO_s;
@@ -49,7 +50,7 @@ namespace WebApplication1.Services
         public Project GetProjectById(string projectId)
         {
             var project = GetById(projectId);
-            if (project == null) { throw new ArgumentException("Project not finded!"); }
+            if (project == null) { throw new UserFriendlyException("Project not finded!"); }
 
             return project;
         }
@@ -58,7 +59,7 @@ namespace WebApplication1.Services
         {
 
             var creator = _userService.GetById(_id);
-                if(creator == null) { throw new ArgumentException("An error ocurred!"); }
+                if(creator == null) { throw new UserFriendlyException("An error ocurred!"); }
             
             var newProject = new Project()
             {
@@ -81,11 +82,11 @@ namespace WebApplication1.Services
         public Project UpdateProject(string userId, string projectId, ProjectInfoDTO thisProject)
         {
             var project = GetById(projectId);
-            if (project == null) { throw new ArgumentException("Project not found!"); }
+            if (project == null) { throw new UserFriendlyException("Project not found!"); }
             
             else if (userId != project.CreatorId)
             {
-                throw new ArgumentException("Sorry! You are not the owner of this project!");
+                throw new UserFriendlyException("Sorry! You are not the owner of this project!");
             }
 
             Update(projectId, thisProject);                  
@@ -99,10 +100,10 @@ namespace WebApplication1.Services
             var user = _userService.GetById(userId);
             
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
-                if (!isPasswordMatch) { throw new ArgumentException("Wrong password"); }
+                if (!isPasswordMatch) { throw new UserFriendlyException("Wrong password"); }
 
             var project = GetById(projectId);
-                if (project == null) { throw new ArgumentException("Cant find this project!"); }
+                if (project == null) { throw new UserFriendlyException("Cant find this project!"); }
 
             Delete(project.Id); return project;
         }

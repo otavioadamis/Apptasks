@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using WebApplication1.Helpers;
 using System.Collections;
 using System.Xml.Linq;
+using WebApplication1.Exceptions;
 
 namespace WebApplication1
 {
@@ -57,7 +58,7 @@ namespace WebApplication1
             
             var app = builder.Build();
 
-                // Configure the HTTP request pipeline.
+            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
@@ -65,6 +66,7 @@ namespace WebApplication1
                 app.UseHsts();
             }
 
+            app.UseMiddleware<GlobalExceptionMiddleware>();
             app.UseMiddleware<JwtMiddleware>();
 
             app.UseHttpsRedirection();
