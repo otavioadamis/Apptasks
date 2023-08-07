@@ -14,5 +14,7 @@ namespace WebApplication1.Models
         public string? CreatorId { get; set; }        
         public List<Task>? Tasks { get; set; }      
         public List<string> Team { get; set; }
+        [JsonIgnore]
+        public byte[]? Cover { get; set; }
     }
 }

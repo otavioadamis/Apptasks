@@ -6,14 +6,10 @@ using System.Text;
 using WebApplication1.Models;
 using WebApplication1.Helpers;
 using Microsoft.Extensions.Configuration;
+using WebApplication1.Interfaces;
 
 namespace WebApplication1.Authorization
 {
-    public interface IJwtUtils
-    {
-        public string CreateToken(User thisUser);
-        public string? ValidateJwtToken(string token);
-    }
 
     public class JwtUtils : IJwtUtils
     {

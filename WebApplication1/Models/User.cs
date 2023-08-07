@@ -14,5 +14,6 @@ namespace WebApplication1.Models
         public string Password { get; set; }
         public string Email { get; set; }
         public Role Role { get; set; }
+        public List<string>? tasksId { get; set; }
     }
 }

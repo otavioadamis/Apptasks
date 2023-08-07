@@ -1,73 +1,57 @@
-﻿using Amazon.Util.Internal.PlatformServices;
-using Microsoft.IdentityModel.Tokens;
-using MongoDB.Driver;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Xml.Linq;
-using WebApplication1.Authorization;
-using WebApplication1.Controllers;
-using WebApplication1.Exceptions;
+﻿using WebApplication1.Exceptions;
+using WebApplication1.Interfaces;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Services
 {
-
-
-    public class UserService
+    public class UserService : IUserService
     {
-        private readonly IMongoCollection<User> _users;
-        private readonly JwtUtils _jwtUtils;
 
-        public UserService(IMongoCollection<User> users, JwtUtils jwtUtils)
+        private readonly IUserRepository _userRepository;
+        private readonly IJwtUtils _jwtUtils;
+
+        public UserService(IUserRepository userRepository, IJwtUtils jwtUtils)
         {
-            _users = users;
+            _userRepository = userRepository;
             _jwtUtils = jwtUtils;
         }
 
-        //CRUD
-
-        //READ
-        public List<User> Get() => _users.Find(user => true).ToList();
-        public User GetByName(string name) => _users.Find(user => user.Name == name).FirstOrDefault();
-        public User GetByEmail(string email) => _users.Find(user => user.Email == email).FirstOrDefault();
-        public User GetById(string id) => _users.Find(user => user.Id == id).FirstOrDefault();
-        //CREATE
-        public User Create(User thisUser)
+        //Get an User by Id (returns a model)
+        public User GetUserById(string _id)
         {
-            _users.InsertOne(thisUser);
-            return thisUser;
+            var user = _userRepository.GetById(_id);
+            if (user == null) { throw new UserFriendlyException("User not found!"); }
+
+            return user;
         }
-        //UPDATE
-        public void Update(string name, User updatedUser) => _users.ReplaceOne(user => user.Name == name, updatedUser);
 
-        public void Update(string _id, UserUpdateDTO thisUser)
+        public User GetUserByEmail(string email)
         {
-            var updateEmail = Builders<User>.Update.Set(o => o.Email, thisUser.Email);
-            _users.UpdateOne(o => o.Id == _id , updateEmail);
-
-            var updateName = Builders<User>.Update.Set(o => o.Name, thisUser.Name);
-            _users.UpdateOne(o => o.Id == _id, updateName);
+            var user = _userRepository.GetByEmail(email);
+            if (user == null) { throw new UserFriendlyException("User not found!"); }
+            return user;
         }
-        //DELETE
-        public void Delete(string id) => _users.DeleteOne(user => user.Id == id);
-         
-        //Get an User by Id (sending a model)
-        public UserResponseModel GetUserById(string _id)
-        {
-            var user = GetById(_id);
-                if(user == null) { throw new UserFriendlyException("User not found!"); }
 
+        public UserResponseModel GetModel(User thisUser)
+        {
             var userModel = new UserResponseModel();
-            userModel = userModel.CreateModel(user);
+            userModel = userModel.CreateModel(thisUser);
+
             return userModel;
+        }
+
+        //Get all users (todo -> return only the model)
+        public List<User> GetAllUsers()
+        {
+            var users = _userRepository.Get();
+                if(users == null) { throw new UserFriendlyException("Theres nobody here!"); }
+            return users;
         }
 
         public LoginResponseModel Signup(UserRegisterDTO thisUser)
         {
-            var checkEmail = GetByEmail(thisUser.Email);
+            var checkEmail = _userRepository.GetByEmail(thisUser.Email);
             if (checkEmail != null)
             {
                 throw new UserFriendlyException("Sorry! This email has already been used!");
@@ -80,9 +64,9 @@ namespace WebApplication1.Services
                 Name = thisUser.Name,
                 Password = thisUser.Password,
                 Role = thisUser.Role
-            }; 
-            
-            Create(newUser);
+            };
+
+            _userRepository.Create(newUser);
             string token = _jwtUtils.CreateToken(newUser);
 
             var userModel = new UserResponseModel();
@@ -96,17 +80,17 @@ namespace WebApplication1.Services
 
             return res;
         }
-       
+
         public LoginResponseModel Login(UserLoginDTO thisUser)
-        {        
-           var user = GetByEmail(thisUser.Email);                      
-            if(user == null)
+        {
+            var user = _userRepository.GetByEmail(thisUser.Email);
+            if (user == null)
             {
                 throw new UserFriendlyException("Invalid credentials!");
             }
 
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
-             if(!isPasswordMatch) { throw new UserFriendlyException("Invalid credentials!"); }
+            if (!isPasswordMatch) { throw new UserFriendlyException("Invalid credentials!"); }
 
             string token = _jwtUtils.CreateToken(user);
 
@@ -123,57 +107,66 @@ namespace WebApplication1.Services
 
         public string ForgotPassword(string email)
         {
-            var user = GetByEmail(email);
+            var user = _userRepository.GetByEmail(email);
             if (user == null) { throw new UserFriendlyException("User not found!"); }
-            
+
             string token =
                 _jwtUtils.CreateToken(user);
 
             return token;
         }
 
-        public User UpdateInfo(string _id, UserUpdateDTO thisUser) 
+        public User UpdateUser(string id, User updatedUser)
         {
-            var user = GetById(_id);
-                if (user == null) { throw new UserFriendlyException("User not found!"); };
+            var user = _userRepository.GetById(id);
+                if (user == null) { throw new UserFriendlyException("User not found!"); }
 
-            Update(_id, thisUser);
+            _userRepository.Update(id, updatedUser);
+            var updatedU = _userRepository.GetById(id);
+            return updatedU;
+        }
 
-            var updatedUser = GetById(_id);
+        public User UpdateInfo(string _id, UserUpdateDTO thisUser)
+        {
+            var user = _userRepository.GetById(_id);
+            if (user == null) { throw new UserFriendlyException("User not found!"); };
+
+            _userRepository.Update(_id, thisUser);
+
+            var updatedUser = _userRepository.GetById(_id);
             return updatedUser;
-
         }
 
         public UserResponseModel ChangePw(string _id, UserResetPwDTO thisUser)
         {
 
-            var user = GetById(_id);
-                if (user == null) { throw new UserFriendlyException("Cant find user!"); };
+            var user = _userRepository.GetById(_id);
+            if (user == null) { throw new UserFriendlyException("Cant find user!"); };
 
             bool isPasswordMatch = BCrypt.Net.BCrypt.Verify(thisUser.Password, user.Password);
             if (isPasswordMatch) { throw new UserFriendlyException("Password needs to be different than the current password"); }
 
             if (thisUser.Password != thisUser.ConfirmPassword) { throw new UserFriendlyException("Confirm Password and Passoword fiels must be equal"); }
-    
+
             thisUser.Password = BCrypt.Net.BCrypt.HashPassword(thisUser.Password);
 
-            var updatePw = Builders<User>.Update.Set(o => o.Password, thisUser.Password);
-            _users.UpdateOne(o => o.Id == _id, updatePw);
+            _userRepository.UpdatePassword(_id, thisUser.Password);
 
-            var updatedUser = GetById(_id);
-            
+            var updatedUser = _userRepository.GetById(_id);
+
             var userModel = new UserResponseModel();
-                userModel = userModel.CreateModel(updatedUser);
-            
+            userModel = userModel.CreateModel(updatedUser);
+
             return userModel;
 
         }
         public void DeleteUser(string name)
         {
-            var user = GetByName(name);
+            var user = _userRepository.GetByName(name);
             if (user == null) { throw new UserFriendlyException("User not found!"); }
 
-            Delete(user.Id);
+            _userRepository.Delete(user.Id);
         }
+
     }
-}
+    }

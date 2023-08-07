@@ -1,17 +1,13 @@
-using MongoDB.Driver.Core.Configuration;
 using MongoDB.Driver;
 using WebApplication1.Services;
 using WebApplication1.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using System.Text.Json.Serialization;
 using WebApplication1.Authorization;
-using Microsoft.Extensions.Configuration;
 using WebApplication1.Helpers;
-using System.Collections;
-using System.Xml.Linq;
 using WebApplication1.Exceptions;
+using WebApplication1.Interfaces;
+using WebApplication1.Models.Email;
+using WebApplication1.Services.EmailServices;
 
 namespace WebApplication1
 {
@@ -20,7 +16,7 @@ namespace WebApplication1
         public static void Main(string[] args)
         {
             
-            var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.           
         builder.Services.AddRazorPages();
@@ -33,20 +29,33 @@ namespace WebApplication1
                 options.JsonSerializerOptions.Converters.Add(new DateOnlyConverter());
             });
 
-            builder.Services.AddScoped<Utils>();
-            builder.Services.AddScoped<TaskService>();
-            builder.Services.AddScoped<UserService>();
-            builder.Services.AddScoped<ProjectService>();
-            builder.Services.AddScoped<AuthService>();
-            builder.Services.AddScoped<JwtUtils>();
-            builder.Services.AddScoped<IUsersDatabaseSettings, UsersDatabaseSettings>();
+            //Scopes
+            builder.Services.AddSingleton<Utils>();            
+            
+            builder.Services.AddSingleton<ITaskService, TaskService>();
+            builder.Services.AddSingleton<IUserService, UserService>();            
+            builder.Services.AddSingleton<IProjectService, ProjectService>();
+            
+            builder.Services.AddSingleton<IJwtUtils, JwtUtils>();
+            builder.Services.AddSingleton<IUsersDatabaseSettings, UsersDatabaseSettings>();
 
-            // Configuring the Mongodb collections
-            var client = new MongoClient();
-            var db = client.GetDatabase();
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+            
+            builder.Services.AddSingleton<IEmailService, EmailService>();
+
+            builder.Services.AddHostedService<BackgroundEmailService>();
+
+            var settings = builder.Configuration.GetSection("UsersDatabaseSettings").Get<AppSettings>();
+            
+            var dbName = settings.DatabaseName;
+            var connectionString = settings.ConnectionString;
+            
+            //Configuring the Mongodb collections
+            var client = new MongoClient(connectionString);
+            var db = client.GetDatabase(dbName);
 
             //Users collection
-            var usersCollection = db.GetCollection<User>();
+            var usersCollection = db.GetCollection<User>("Users");
             builder.Services.AddSingleton<IMongoDatabase>(db);
             builder.Services.AddSingleton<IMongoCollection<User>>(usersCollection);
 
@@ -62,15 +71,17 @@ namespace WebApplication1
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
-
                 app.UseHsts();
             }
 
             app.UseMiddleware<GlobalExceptionMiddleware>();
             app.UseMiddleware<JwtMiddleware>();
 
-            app.UseHttpsRedirection();
-            
+            if(app.Environment.IsDevelopment()) 
+            {               
+                app.UseHttpsRedirection(); 
+            }
+        
             app.UseStaticFiles();
 
             app.UseRouting();

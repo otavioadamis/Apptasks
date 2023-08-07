@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using WebApplication1.Exceptions;
+using WebApplication1.Interfaces;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
 using WebApplication1.Models.DTOs.TaskTO_s;
@@ -11,15 +12,15 @@ using Task = WebApplication1.Models.Task;
 
 namespace WebApplication1.Services
 {
-    public class TaskService
+    public class TaskService : ITaskService
     {
-        private readonly UserService _userService;
-        private readonly ProjectService _projectService;
+        private readonly IUserService _userService;
+        private readonly IProjectService _projectService;
 
-        public TaskService(UserService userService, ProjectService projectService)
+        public TaskService(IUserService userService, IProjectService projectService)
         {
-            this._userService = userService;
-            this._projectService = projectService;
+            _userService = userService;
+            _projectService = projectService;
         }
 
         public Task GetTask(string projectId, string taskId)
@@ -56,31 +57,38 @@ namespace WebApplication1.Services
             };
 
             project.Tasks.Add(newTask);
-                _projectService.Update(projectId, project);
-            
+            _projectService.Update(projectId, project);
+
             return newTask;
         }
 
-        public Task AssignTask(string projectId, string taskId, AssignTaskModel request) 
+        public Task AssignTask(string projectId, string taskId, AssignTaskModel request)
         {
             var project = _projectService.GetById(projectId);
             if (project == null) { throw new UserFriendlyException("Not found!"); }
 
-            var user = _userService.GetByEmail(request.UserEmail); ;
+            var user = _userService.GetUserByEmail(request.UserEmail);
             if (user == null) { throw new UserFriendlyException("User not found!"); }
-            
+
             else if (!project.Team.Exists(u => u.Equals(user.Id)))
             {
                 throw new UserFriendlyException("Sorry! User is not on the team!");
             }
-            
+
             var taskToAssign = project.Tasks.Find(t => t.Id == taskId);
             
             if (taskToAssign != null)
             {
+                if (user.tasksId == null) { user.tasksId = new List<string>(); }
+                else if (user.tasksId.Contains(taskToAssign.Id)) { throw new UserFriendlyException("User is already assigned to this task!"); }      
+                
+                user.tasksId.Add(taskToAssign.Id);
                 taskToAssign.Responsable = user.Id;
+
+                _userService.UpdateUser(user.Id, user);
                 _projectService.Update(project.Id, project);
-                    return taskToAssign;
+                
+                return taskToAssign;
             }
             throw new UserFriendlyException("Error finding the task!");
         }
@@ -106,7 +114,7 @@ namespace WebApplication1.Services
             if (project == null) { throw new UserFriendlyException("Not found!"); }
 
             var task = project.Tasks.Find(t => t.Id == taskId);
-            if(task.Responsable != userId) { throw new UserFriendlyException("Sorry! Only the responsable of the task can mark as completed or not!"); }
+            if (task.Responsable != userId) { throw new UserFriendlyException("Sorry! Only the responsable of the task can mark as completed or not!"); }
             if (task != null)
             {
                 task.IsCompleted = request.IsCompleted;
@@ -126,7 +134,7 @@ namespace WebApplication1.Services
             {
                 project.Tasks.Remove(taskToRemove);
                 _projectService.Update(project.Id, project);
-                    return project;
+                return project;
             }
             throw new UserFriendlyException("Error finding the task!");
         }

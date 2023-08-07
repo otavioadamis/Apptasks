@@ -6,10 +6,12 @@ namespace WebApplication1.Exceptions
     public class GlobalExceptionMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<GlobalExceptionMiddleware> _logger;
 
-        public GlobalExceptionMiddleware(RequestDelegate next)
+        public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -43,6 +45,7 @@ namespace WebApplication1.Exceptions
             }
             else
             {
+                _logger.LogError(exception.Message + exception.StackTrace);
                 //return a generic error response.
                 var errorResponse = new ErrorResponse
                 {

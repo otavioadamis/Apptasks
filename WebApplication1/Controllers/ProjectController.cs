@@ -4,6 +4,7 @@ using WebApplication1.Models;
 using WebApplication1.Services;
 using WebApplication1.Models.DTOs;
 using WebApplication1.Models.DTOs.ProjectTO_s;
+using WebApplication1.Interfaces;
 
 namespace WebApplication1.Controllers
 {
@@ -12,19 +13,18 @@ namespace WebApplication1.Controllers
     [CustomAuthorize(Role.Admin)]
     public class ProjectController : ControllerBase
     {
-        private readonly ProjectService _projectService;
-        private readonly JwtUtils _jwtUtils;
-        private readonly UserService _userService;
+        private readonly IProjectService _projectService;
+        private readonly IJwtUtils _jwtUtils;
+        private readonly IUserService _userService;
+        private readonly ILogger<ProjectController> _logger;
 
-        private readonly AuthService _authService;
 
-        public ProjectController(ProjectService projectService, JwtUtils jwtUtils, AuthService authService, UserService userService)
+        public ProjectController(IProjectService projectService, IJwtUtils jwtUtils, IUserService userService, ILogger<ProjectController> logger)
         {
             this._projectService = projectService;
             this._jwtUtils = jwtUtils;
             this._userService = userService;
-
-            this._authService = authService;
+            this._logger = logger;
         }
 
         [HttpGet()]
@@ -61,11 +61,36 @@ namespace WebApplication1.Controllers
 
         [CustomAuthorize(Role.Admin)]
         [HttpDelete("projects/{projectId}")]
-        public ActionResult Delete(string projectId ,ProjectDelDTO request)
+        public ActionResult Delete(string projectId, ProjectDelDTO request)
         {
             var user = HttpContext.Items["User"] as User;
             var projectDeleted = _projectService.DeleteProject(user.Id, projectId, request);
             return Ok(projectDeleted);
         }
+
+        [CustomAuthorize(Role.Admin)]
+        [HttpPut("projects/{projectId}/cover")]
+        public async Task<ActionResult> UploadImage(string projectId, IFormFile image)
+        {
+            var response = _projectService.UploadImage(projectId, image);
+            return Ok(response);
+        }
+
+        [CustomAuthorize(Role.Admin)]
+        [HttpGet("projects/{projectId}/cover")]
+        public async Task<ActionResult> GetImage(string projectId)
+        {
+            var imageBytes = _projectService.GetImageFromProjectId(projectId);
+            return File(imageBytes, "image/jpg");
+        }
+
+        [HttpGet("emails")]
+        public async Task<ActionResult> GetEmails()
+        {
+            var emails = _projectService.GetEmails();
+            return Ok(emails);  
+        }
     }
 }
+
+

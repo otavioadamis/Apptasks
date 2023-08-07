@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    networks:
+      - netTaskAppAndMongo
+    volumes:
+      - mongodb_data:/data/db
+
+  webapplication1:
+    build:
+      context: ./WebApplication1
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"   # Map container port 80 to host port 8080
+      - "8443:443"
+    networks:
+      - netTaskAppAndMongo
+    depends_on:
+      - mongo
+
+networks:
+  netTaskAppAndMongo:
+
+volumes:
+  mongodb_data:

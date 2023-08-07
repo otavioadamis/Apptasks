@@ -1,15 +1,8 @@
 ﻿using WebApplication1.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Xml.Linq;
 using WebApplication1.Models;
 using WebApplication1.Models.DTOs;
-using WebApplication1.Services;
-using Amazon.Runtime;
-using WebApplication1.Helpers;
-using Microsoft.Net.Http.Headers;
+using WebApplication1.Interfaces;
 
 namespace WebApplication1.Controllers
 {
@@ -17,15 +10,15 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserService _userService;
-        private readonly JwtUtils _jwtUtils;
-        private readonly AuthService _authService;
+        private readonly IUserService _userService;
+        private readonly IJwtUtils _jwtUtils;
+        private readonly ILogger<UserController> _logger;
 
-        public UserController(UserService userService, JwtUtils jwtUtils, AuthService authService)
+        public UserController(IUserService userService, IJwtUtils jwtUtils, ILogger<UserController> logger)
         {
             this._userService = userService;
-            this._jwtUtils = jwtUtils;
-            this._authService = authService;
+            this._jwtUtils = jwtUtils;           
+            this._logger = logger;
         }
 
         //Todo, update this method to send just the ResponseModels from all users. 
@@ -33,13 +26,15 @@ namespace WebApplication1.Controllers
         [HttpGet()]
         public ActionResult<List<User>> Get()
         {
-            return _userService.Get();
+            var users = _userService.GetAllUsers();
+            return Ok(users);
         }
 
         [HttpGet("{id}")]
         public ActionResult<UserResponseModel> GetById(string id)
         {
-            var userModel = _userService.GetUserById(id);
+            var user = _userService.GetUserById(id);
+            var userModel = _userService.GetModel(user);
             return userModel;     
         }
 
@@ -80,7 +75,6 @@ namespace WebApplication1.Controllers
         }
 
         //Reset the user password, authorized with JwT Token
-        //Todo, put the logic in services
         [HttpPost("resetpassword")]
         [CustomAuthorize]
         public ActionResult<UserResponseModel> ResetPassword(UserResetPwDTO thisUser)

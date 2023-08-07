@@ -9,6 +9,8 @@ using WebApplication1.Models.DTOs.TaskTO_s;
 using WebApplication1.Services;
 using Task = WebApplication1.Models.Task;
 using WebApplication1.Helpers;
+using WebApplication1.Interfaces;
+using WebApplication1.Services.EmailServices;
 
 namespace WebApplication1.Controllers
 {
@@ -16,22 +18,22 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class TaskController : ControllerBase
     {
-        private readonly ProjectService _projectService;
-        private readonly JwtUtils _jwtUtils;
-        private readonly UserService _userService;
-        private readonly TaskService _taskService;
+        private readonly IProjectService _projectService;
+        private readonly IJwtUtils _jwtUtils;
+        private readonly IUserService _userService;
+        private readonly ITaskService _taskService;
+        private readonly EmailService _emailService;
 
-        private readonly AuthService _authService;
+        private readonly ILogger<TaskController> _logger;
 
-        public TaskController(ProjectService projectService, JwtUtils jwtUtils, AuthService authService, UserService userService, TaskService taskService)
+        public TaskController(IProjectService projectService, IJwtUtils jwtUtils, IUserService userService, ITaskService taskService, EmailService emailService, ILogger<TaskController> logger)
         {
             this._projectService = projectService;
             this._jwtUtils = jwtUtils;
             this._userService = userService;
             this._taskService = taskService;
-            
-            this._authService = authService;
-
+            this._logger = logger;
+            this._emailService = emailService;
         }
 
         [HttpGet("projects/{projectId}/tasks/{taskId}")]
@@ -57,10 +59,10 @@ namespace WebApplication1.Controllers
             var assignedTask = _taskService.AssignTask(projectId, taskId, request);
             return Ok(assignedTask);
         }
-        
+
         [CustomAuthorize(Role.Admin)]
         [HttpPatch("projects/{projectId}/tasks/{taskId}")]
-        public ActionResult<Task> UpdateTask(string projectId, string taskId, UpdateTaskDTO request) 
+        public ActionResult<Task> UpdateTask(string projectId, string taskId, UpdateTaskDTO request)
         {
             var updatedTask = _taskService.Update(projectId, taskId, request);
             return Ok(updatedTask);
@@ -80,7 +82,14 @@ namespace WebApplication1.Controllers
         public ActionResult Delete(string projectId, string taskId)
         {
             var deleteTask = _taskService.Delete(projectId, taskId);
-            return Ok(deleteTask);           
+            return Ok(deleteTask);
+        }
+
+        [HttpGet("sendemail")]
+        public async Task<ActionResult> SendEmail()
+        {
+            _emailService.SendEmailAsync(_projectService.GetEmails());
+            return Ok("emails sended!");
         }
     }
   }

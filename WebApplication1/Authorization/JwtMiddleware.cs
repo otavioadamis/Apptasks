@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using WebApplication1.Services;
 using WebApplication1.Helpers;
+using WebApplication1.Interfaces;
 
 namespace WebApplication1.Authorization
 {
@@ -15,14 +16,14 @@ namespace WebApplication1.Authorization
             _configuration = configuration;
         }
 
-        public async Task Invoke(HttpContext context, UserService userService, JwtUtils jwtUtils)
+        public async Task Invoke(HttpContext context, IUserService userService, IJwtUtils jwtUtils)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
             var userId = jwtUtils.ValidateJwtToken(token);
             if (userId != null)
             {
                 // attach user to context on successful jwt validation
-                context.Items["User"] = userService.GetById(userId);
+                context.Items["User"] = userService.GetUserById(userId);
             }
 
             await _next(context);
