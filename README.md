@@ -44,8 +44,8 @@ The project includes an email service for sending task deadline notifications. I
 
 ### Installation
 
-    1. Clone the repository: `git clone https://github.com/yourusername/yourproject.git`
-    2. Navigate to the project directory: `cd yourproject`
+    1. Clone the repository: `git clone https://github.com/otavioadamis/Apptasks.git`
+    2. Navigate to the project directory: `cd Apptasks`
     3. Restore dependencies: `dotnet restore`
     4. Configure the application settings in `appsettings.json`.
     5. Build the project: `dotnet build`
